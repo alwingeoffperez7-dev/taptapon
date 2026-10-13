@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TapTapon Points</title>
+  <meta name="theme-color" content="#0F3D2E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Tap<span>Tapon</span></div>
+    <div class="tagline">I-tap. I-tapon. Ma-reward.</div>
+  </header>
+
+  <main class="wrap">
+    <form id="lookup" class="card">
+      <label for="sid">Your student number</label>
+      <div class="inline">
+        <input id="sid" inputmode="numeric" placeholder="2024-00123" autocomplete="off" required>
+        <button class="btn-primary">Check</button>
+      </div>
+      <p id="lookup-msg" class="muted" role="status"></p>
+    </form>
+
+    <section id="me" class="wrap" style="padding:0" hidden>
+      <div class="card points-card" aria-live="polite">
+        <p class="hello">Hi, <span id="name"></span>!</p>
+        <p class="points"><span id="points">0</span> <small id="points-label">points</small></p>
+        <p class="muted"><span id="bottles">0 bottles</span> recycled · <span id="today">0</span> points today</p>
+        <p class="salamat">Salamat sa pag-segregate! ♻️</p>
+      </div>
+
+      <div class="card">
+        <h2>Rewards</h2>
+        <ul id="rewards" class="list"></ul>
+      </div>
+
+      <div class="card">
+        <h2>My redemptions</h2>
+        <ul id="redemptions" class="list"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Recent deposits</h2>
+        <ul id="deposits" class="list"></ul>
+      </div>
+    </section>
+
+    <div class="card">
+      <h2>Top 10 recyclers</h2>
+      <ol id="leaderboard" class="list"></ol>
+    </div>
+  </main>
+
+  <script type="module" src="js/student.js"></script>
+</body>
+</html>

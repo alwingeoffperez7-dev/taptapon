@@ -9,7 +9,7 @@ A smart two-compartment trash bin for QCU. It alerts janitors when it's full and
 | Database (rules + seed) | `firebase/` | ✅ Phase 1 |
 | Simulator | `simulator/` | ✅ Phase 2 |
 | Service (points + Telegram) | `service/` | ✅ Phase 3 |
-| Student dashboard | `dashboard/index.html` | ⏳ Phase 4 |
+| Student dashboard | `dashboard/index.html` | ✅ Phase 4 |
 | Admin dashboard | `dashboard/admin.html` | ⏳ Phase 5 |
 | Firmware (ESP32) | `firmware/` | ⏳ Phase 6 |
 
@@ -101,6 +101,24 @@ Unit tests for the rules (no Firebase needed): `npm test`.
 2. Create a Telegram group for the janitors and add your bot to it. Send any message in the group, such as `hi`.
 3. In a browser, open `https://api.telegram.org/bot<TOKEN>/getUpdates`, replacing `<TOKEN>` with your token. Find `"chat":{"id":-100…`. That number, including the minus sign, is your `TELEGRAM_CHAT_ID`.
 4. Restart the service (Ctrl+C, then `npm start`), push the slider to 85%, and the group gets the alert.
+
+## Phase 4 — Student dashboard
+
+The page students open on their phone next to a bin. No login: they type their student number.
+
+### Run it
+Same as the simulator: Live Server on `dashboard/index.html`, or `py -m http.server 5599` and open <http://localhost:5599/dashboard/>.
+To try it on your phone, both devices must be on the same Wi-Fi. Use your laptop's IP instead of `localhost`, for example `http://192.168.1.5:5599/dashboard/`. With the `py` server, add `--bind 0.0.0.0`.
+
+### Test it (keep the service running)
+| Do this | You should see |
+|---|---|
+| Enter `2024-00123` | Juan D.'s points, bottles, today's points out of 20, deposits, and his row highlighted in the Top 10 |
+| Enter `2024-99999` | "Student number not found…" |
+| Enter `abc` | "Use the format 2024-00123." |
+| Reload the page | It remembers the last student number |
+| In the simulator, tap `A1B2C3D4` and drop a bottle | Points go up by 1 **without reloading**, and a new "+1" deposit appears |
+| Earn 10+ points, then tap **10 pts** on the raffle | A confirmation box, then a "Waiting: show your school ID" entry under *My redemptions*. Spendable points drop by 10 until an admin approves or rejects it. |
 
 ## Secrets — never commit these
 `.gitignore` already covers them:
