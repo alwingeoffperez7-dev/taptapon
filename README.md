@@ -8,7 +8,7 @@ A smart two-compartment trash bin for QCU. It alerts janitors when it's full and
 |---|---|---|
 | Database (rules + seed) | `firebase/` | ✅ Phase 1 |
 | Simulator | `simulator/` | ✅ Phase 2 |
-| Service (points + Telegram) | `service/` | ⏳ Phase 3 |
+| Service (points + Telegram) | `service/` | ✅ Phase 3 |
 | Student dashboard | `dashboard/index.html` | ⏳ Phase 4 |
 | Admin dashboard | `dashboard/admin.html` | ⏳ Phase 5 |
 | Firmware (ESP32) | `firmware/` | ⏳ Phase 6 |
@@ -65,6 +65,42 @@ A web page that writes to Firebase exactly like the ESP32 will. **Run it on your
 | Click **Drop residual** | The deposit has `type: "residual"`, `count: 0`. |
 
 Points don't change yet. That's the service's job (Phase 3). Once the service is running, each deposit also gets a gold `service → …` line in the log.
+
+## Phase 3 — Service (points + Telegram alerts)
+
+A Node script that runs on a laptop. It's the **only** thing that changes points. Needs Node.js 20.6 or later (`node --version`).
+
+### Set it up (one time)
+1. **Get the admin key.** In the Firebase console, click ⚙️ (next to *Project Overview*) → **Project settings** → **Service accounts** tab → **Generate new private key** → **Generate key**.
+   A `.json` file downloads. Rename it to `serviceAccountKey.json` and move it into the `service/` folder.
+   ⚠️ This key can do *anything* to your database. Never commit it, share it, or paste it into chat. `.gitignore` already blocks it.
+2. **Create `.env`.** In `service/`, copy `.env.example` to `.env`. The database URL is already filled in.
+3. **Install.** In a terminal inside `service/`, run `npm install`.
+
+### Run and test points
+1. In `service/`, run `npm start`. It should print `TapTapon service running.`
+2. Any deposits made before the service started are processed right away, and each one prints a line such as `deposit -P3p… : ok, +1 pt → 2024-00123`.
+3. Open the simulator, pick tag `A1B2C3D4`, and drop a bottle. The service prints `ok, +1 pt`, and the simulator log shows a gold `service → ok` line.
+
+| Test in the simulator | Expected `reason` |
+|---|---|
+| Tag `A1B2C3D4`, Drop bottle, 18 g | `ok`, +1 pt |
+| **No tap**, Drop bottle | `no_tap` |
+| Tag `FFFFFFFF (unregistered card)`, Drop bottle | `unknown_tag` |
+| Tag `A1B2C3D4`, **Drop residual** | `residual` |
+| Tag `A1B2C3D4`, weight **1** g, Drop bottle | `not_verified` |
+| Tag `A1B2C3D4`, drop 21 bottles in one day | the 21st gets `daily_cap`, +0 |
+| Slider to 85%, release | Console: `[Telegram not set up] 🗑️ Canteen Bin … 85% full` (once only) |
+| Slider to 70% | nothing happens (between 50% and 80%) |
+| **Empty bin** | Console: `emptied, alert re-armed` |
+
+Unit tests for the rules (no Firebase needed): `npm test`.
+
+### Turn on Telegram alerts
+1. In Telegram, message **@BotFather** → `/newbot` → give it a name, e.g. `TapTapon Alerts`, and a username ending in `bot`. BotFather replies with a **token**. Put it in `.env` as `TELEGRAM_BOT_TOKEN=`.
+2. Create a Telegram group for the janitors and add your bot to it. Send any message in the group, such as `hi`.
+3. In a browser, open `https://api.telegram.org/bot<TOKEN>/getUpdates`, replacing `<TOKEN>` with your token. Find `"chat":{"id":-100…`. That number, including the minus sign, is your `TELEGRAM_CHAT_ID`.
+4. Restart the service (Ctrl+C, then `npm start`), push the slider to 85%, and the group gets the alert.
 
 ## Secrets — never commit these
 `.gitignore` already covers them:

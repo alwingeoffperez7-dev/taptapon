@@ -3,6 +3,8 @@
 > **I-tap. I-tapon. Ma-reward.**
 > A smart two-compartment trash bin for QCU that alerts janitors when it is full and rewards students with points for *verified* recycling.
 
+**Current status and next steps: see `PROGRESS.md`.** Update it at the end of every session.
+
 This file is the project brief for Claude Code. Read it fully before writing any code, and keep it up to date when decisions change.
 
 ---
@@ -212,7 +214,7 @@ taptapon/
 ## 5. Tech choices (keep it simple — this is a student project)
 
 - **Dashboard and simulator:** plain HTML, CSS and JavaScript (ES modules). **No build step, no framework.** Load the Firebase JS SDK (modular, v10 or later) from the official `gstatic.com` CDN. Run locally with the VS Code **Live Server** extension.
-- **Service:** Node.js 20+ with `firebase-admin` and `dotenv`. Call the Telegram Bot API with built-in `fetch` (`https://api.telegram.org/bot<TOKEN>/sendMessage`); no extra Telegram library needed.
+- **Service:** Node.js 20.6+ with `firebase-admin` only (`.env` is loaded by Node's built-in `--env-file`, so no `dotenv`). Point/alert rules live in `service/rules.js` with tests in `rules.test.js` (`npm test`). Call the Telegram Bot API with built-in `fetch` (`https://api.telegram.org/bot<TOKEN>/sendMessage`); no extra Telegram library needed.
 - **Firmware:** Arduino IDE or PlatformIO, ESP32 board package. Libraries: `MFRC522`, `ESP32Servo`, `HX711`, and `FirebaseClient` by Mobizt (the older "Firebase ESP32 Client" is deprecated).
 - **Auth:** Firebase Authentication (email/password). An account's role comes from `/roles/{uid}`, not from its email.
   - `admin` accounts → admin dashboard.
