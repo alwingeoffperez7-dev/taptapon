@@ -1,0 +1,7 @@
+# Secrets — never commit
+.env
+serviceAccountKey.json
+*-firebase-adminsdk-*.json
+firmware/**/config.h
+
+node_modules/

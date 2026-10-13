@@ -1,0 +1,102 @@
+{
+  "rules": {
+    // The service uses the Admin SDK, which bypasses these rules entirely.
+    // Everything below limits what browsers and the ESP32 can do.
+
+    "config": {
+      ".read": true,
+      ".write": "auth != null && root.child('roles/' + auth.uid).val() === 'admin'"
+    },
+
+    "roles": {
+      // Set by hand in the Firebase console. A user may only read their own role.
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
+
+    "bins": {
+      ".read": true,
+      "$binId": {
+        ".write": "auth != null && root.child('roles/' + auth.uid).val() === 'admin'",
+        // The device may only update readings of a bin that already exists (it can't invent bins).
+        "fillPercent": {
+          ".write": "auth != null && root.child('roles/' + auth.uid).val() === 'device' && data.parent().child('name').exists()",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+        },
+        "distanceCm": {
+          ".write": "auth != null && root.child('roles/' + auth.uid).val() === 'device' && data.parent().child('name').exists()",
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "lastSeen": {
+          ".write": "auth != null && root.child('roles/' + auth.uid).val() === 'device' && data.parent().child('name').exists()",
+          ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+        }
+      }
+    },
+
+    "tags": {
+      // Not public: a known tag UID is half of what you need to fake a deposit.
+      ".read": "auth != null && (root.child('roles/' + auth.uid).val() === 'admin' || root.child('roles/' + auth.uid).val() === 'device')",
+      ".write": "auth != null && root.child('roles/' + auth.uid).val() === 'admin'"
+    },
+
+    "students": {
+      ".read": true,
+      ".indexOn": ["points"],
+      "$studentId": {
+        ".write": "auth != null && root.child('roles/' + auth.uid).val() === 'admin'",
+        "name": { ".validate": "newData.isString() && newData.val().length <= 30" },
+        // .validate still runs for admins, so no browser can change points — only the service can.
+        "points": { ".validate": "(!data.exists() && newData.val() === 0) || newData.val() === data.val()" },
+        "totalBottles": { ".validate": "(!data.exists() && newData.val() === 0) || newData.val() === data.val()" },
+        "daily": {
+          "$day": { ".validate": "newData.val() === data.val()" }
+        },
+        "createdAt": { ".validate": "newData.isNumber()" }
+      }
+    },
+
+    "deposits": {
+      ".read": true,
+      ".indexOn": ["studentId", "processed"],
+      "$depositId": {
+        // Device can create a deposit but never edit one afterwards.
+        ".write": "!data.exists() && auth != null && root.child('roles/' + auth.uid).val() === 'device'",
+        ".validate": "newData.hasChildren(['binId', 'type', 'count', 'weightGrams', 'timestamp'])",
+        "binId": { ".validate": "root.child('bins/' + newData.val() + '/name').exists()" },
+        "tagUid": { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "type": { ".validate": "newData.val() === 'pet' || newData.val() === 'residual'" },
+        "count": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10" },
+        "weightGrams": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "timestamp": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        // processed, studentId, pointsAwarded, reason: service only.
+        "$other": { ".validate": false }
+      }
+    },
+
+    "rewards": {
+      ".read": true,
+      ".write": "auth != null && root.child('roles/' + auth.uid).val() === 'admin'"
+    },
+
+    "redemptions": {
+      ".read": true,
+      ".indexOn": ["studentId", "status"],
+      "$redemptionId": {
+        // Anyone may create one (students don't log in); only admins may change it.
+        ".write": "!data.exists() || (auth != null && root.child('roles/' + auth.uid).val() === 'admin')",
+        ".validate": "newData.hasChildren(['studentId', 'rewardId', 'cost', 'status', 'timestamp'])",
+        "studentId": { ".validate": "root.child('students/' + newData.val()).exists() && (!data.exists() || newData.val() === data.val())" },
+        "rewardId": { ".validate": "(!data.exists() && root.child('rewards/' + newData.val() + '/active').val() === true) || newData.val() === data.val()" },
+        // Cost must match the reward's real price, so nobody can redeem for 0.
+        "cost": { ".validate": "(!data.exists() && newData.val() === root.child('rewards/' + newData.parent().child('rewardId').val() + '/cost').val()) || newData.val() === data.val()" },
+        // New → pending only. Admin → approved/rejected, and only from pending.
+        "status": { ".validate": "(!data.exists() && newData.val() === 'pending') || (data.val() === 'pending' && (newData.val() === 'approved' || newData.val() === 'rejected'))" },
+        "timestamp": { ".validate": "(!data.exists() && newData.isNumber() && newData.val() <= now + 60000) || newData.val() === data.val()" },
+        // processed, reason: service only.
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

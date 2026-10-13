@@ -1,0 +1,47 @@
+{
+  "config": {
+    "pointsPerBottle": 1,
+    "dailyPointCap": 20,
+    "fullThresholdPercent": 80,
+    "alertResetPercent": 50,
+    "minDepositGrams": 10,
+    "binDepthCm": 45
+  },
+  "bins": {
+    "bin-01": {
+      "name": "Canteen Bin",
+      "location": "QCU Canteen, Ground Floor",
+      "fillPercent": 0,
+      "distanceCm": 45,
+      "status": "ok",
+      "lastSeen": 0,
+      "alertSent": false,
+      "totals": { "bottles": 0, "weightGrams": 0 }
+    },
+    "bin-02": {
+      "name": "Library Bin",
+      "location": "QCU Library, 2nd Floor",
+      "fillPercent": 0,
+      "distanceCm": 45,
+      "status": "ok",
+      "lastSeen": 0,
+      "alertSent": false,
+      "totals": { "bottles": 0, "weightGrams": 0 }
+    }
+  },
+  "tags": {
+    "A1B2C3D4": "2024-00123",
+    "B2C3D4E5": "2024-00456",
+    "C3D4E5F6": "2024-00789"
+  },
+  "students": {
+    "2024-00123": { "name": "Juan D.", "points": 0, "totalBottles": 0, "createdAt": 1760342400000 },
+    "2024-00456": { "name": "Maria S.", "points": 0, "totalBottles": 0, "createdAt": 1760342400000 },
+    "2024-00789": { "name": "Jose R.", "points": 0, "totalBottles": 0, "createdAt": 1760342400000 }
+  },
+  "rewards": {
+    "reward-print": { "name": "Free print (5 pages)", "cost": 30, "sponsor": "QCU Library", "active": true },
+    "reward-snack": { "name": "₱10 off at the canteen", "cost": 50, "sponsor": "QCU Canteen", "active": true },
+    "reward-raffle": { "name": "Monthly raffle entry", "cost": 10, "sponsor": "TapTapon", "active": true }
+  }
+}
