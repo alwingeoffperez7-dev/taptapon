@@ -4,6 +4,7 @@ import { db } from "./firebase-config.js";
 import {
   ref, query, orderByChild, equalTo, limitToLast, onValue, push, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { manilaDay, when, el, row, emptyRow, toList } from "./ui.js";
 
 const $ = (id) => document.getElementById(id);
 const ID_PATTERN = /^\d{4}-\d{5}$/; // also keeps . # $ [ ] (illegal in Firebase paths) out of queries
@@ -27,38 +28,6 @@ let studentId = null;
 let redemptions = {};
 let leaders = [];
 let stopListening = [];
-
-// Same as the service: the daily cap resets at Manila midnight.
-const manilaDay = (ms) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(ms);
-const when = (ms) => new Date(ms).toLocaleString("en-PH", {
-  timeZone: "Asia/Manila", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-});
-
-// Builds an element with textContent (never innerHTML), so data from the database can't inject HTML.
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
-function row(title, sub, right, rightClass = "") {
-  const li = el("li");
-  const main = el("div", "main");
-  main.append(el("div", "title", title));
-  if (sub) main.append(el("div", "sub", sub));
-  li.append(main);
-  if (right instanceof Node) li.append(right);
-  else if (right !== undefined) li.append(el("div", `right ${rightClass}`, right));
-  return li;
-}
-const emptyRow = (text) => el("li", "empty", text);
-
-// Firebase returns query results in ascending order; snap.forEach keeps that order.
-function toList(snap) {
-  const list = [];
-  snap.forEach((child) => { list.push({ id: child.key, ...child.val() }); });
-  return list;
-}
 
 // Points tied up in pending requests can't be spent twice.
 function availablePoints() {

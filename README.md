@@ -10,7 +10,7 @@ A smart two-compartment trash bin for QCU. It alerts janitors when it's full and
 | Simulator | `simulator/` | ✅ Phase 2 |
 | Service (points + Telegram) | `service/` | ✅ Phase 3 |
 | Student dashboard | `dashboard/index.html` | ✅ Phase 4 |
-| Admin dashboard | `dashboard/admin.html` | ⏳ Phase 5 |
+| Admin dashboard | `dashboard/admin.html` | ✅ Phase 5 |
 | Firmware (ESP32) | `firmware/` | ⏳ Phase 6 |
 
 ## Phase 1 — Firebase setup (one time)
@@ -119,6 +119,25 @@ To try it on your phone, both devices must be on the same Wi-Fi. Use your laptop
 | Reload the page | It remembers the last student number |
 | In the simulator, tap `A1B2C3D4` and drop a bottle | Points go up by 1 **without reloading**, and a new "+1" deposit appears |
 | Earn 10+ points, then tap **10 pts** on the raffle | A confirmation box, then a "Waiting: show your school ID" entry under *My redemptions*. Spendable points drop by 10 until an admin approves or rejects it. |
+
+## Phase 5 — Admin dashboard
+
+For facility staff, on a laptop. Open <http://localhost:5599/dashboard/admin.html> (or Live Server on `dashboard/admin.html`) and sign in with the **admin** account from step 6. A non-admin account is signed out with a message.
+
+**What's on it**
+- **Stats:** bottles today, bottles in the last 7 days, segregation rate, and active students. **Segregation rate** = drops at the bottle port that were real bottles (IR count ≥ 1 and weight ≥ `minDepositGrams`) ÷ all drops at the bottle port, whether or not someone tapped.
+- **Bin cards:** fill bar (green < 50%, gold 50–79%, red ≥ 80%), **FULL** badge, **OFFLINE** if there's been no heartbeat for 2 minutes, last seen, and totals.
+- **Pending redemptions:** oldest first, with the student's current points. **Approve** / **Reject**. The service deducts the points after you approve.
+
+### Test it (keep the service running)
+| Do this | You should see |
+|---|---|
+| Simulator: slider to 85% | The bin card turns red and shows **FULL**. The Telegram alert arrives. |
+| Close the simulator tab, wait 2+ minutes | The bin shows **OFFLINE** |
+| Student page: request a reward | It appears under *Pending redemptions* instantly |
+| **Approve** it | It moves to *Recent decisions* as "Approved · −10 pts", and the student's points drop by 10 |
+| Approve a request the student can't afford | "Rejected by system: not enough points". Points unchanged. |
+| **Reject** one | "Rejected". Points unchanged, and the student's held points are released. |
 
 ## Secrets — never commit these
 `.gitignore` already covers them:

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TapTapon Admin</title>
+  <meta name="theme-color" content="#0F3D2E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar split">
+    <div>
+      <div class="brand">Tap<span>Tapon</span> Admin</div>
+      <div class="tagline">WasteWise Bin dashboard</div>
+    </div>
+    <div id="session" hidden>
+      <span id="who" class="tagline"></span>
+      <button id="logout" class="btn-ghost">Sign out</button>
+    </div>
+  </header>
+
+  <main class="wrap wide">
+    <form id="login" class="card narrow" hidden>
+      <h2>Admin sign in</h2>
+      <label for="email">Email</label>
+      <input id="email" type="email" value="admin@taptapon.test" required autocomplete="username">
+      <label for="password" class="spaced">Password</label>
+      <input id="password" type="password" required autocomplete="current-password">
+      <button class="btn-primary full">Sign in</button>
+      <p id="login-msg" class="muted" role="status"></p>
+    </form>
+
+    <div id="app" class="stack" hidden>
+      <section id="stats" class="stats" aria-label="Stats"></section>
+
+      <section>
+        <h2>Bins</h2>
+        <div id="bins" class="bin-grid"></div>
+      </section>
+
+      <section class="two-col">
+        <div class="card">
+          <h2>Pending redemptions <span id="pending-count" class="count">0</span></h2>
+          <p class="muted">Check the student's school ID before approving. Points are deducted by the service.</p>
+          <ul id="pending" class="list"></ul>
+        </div>
+        <div class="card">
+          <h2>Recent decisions</h2>
+          <ul id="decided" class="list"></ul>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

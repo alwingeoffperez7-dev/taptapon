@@ -14,12 +14,12 @@ _Last updated: 2026-10-14_
 - **Phase 3 — Service** ✅ committed (see git log)
   - Runs live with key + `.env` (both git-ignored). Verified live: ok, no_tap, unknown_tag, residual, not_verified;
     alert fires once at 85%, quiet at 90/70, re-arms at 10%. daily_cap covered by unit tests only.
-- **Phase 4 — Student dashboard** ✅ committed. Tested at phone width against live data: lookup, remembered ID, live points, deposits, held points, leaderboard. A test pending redemption (Juan, raffle, 10 pts, `-P3r__eaUswW_kFyaS7m`) is left in place for testing Phase 5.
+- **Phase 4 — Student dashboard** ✅ committed. Tested at phone width against live data: lookup, remembered ID, live points, deposits, held points, leaderboard. 
+- **Phase 5 — Admin dashboard** ✅ committed. User-tested live: approve → service deducts (21→11→1 for Juan), reject → no change, FULL badge + Telegram alert on bin-01, OFFLINE badge after 2 min. Shared helpers in `dashboard/js/ui.js`.
 
 ## Next up (in order)
 1. ~~Telegram~~ ✅ bot @taptapon_qcu_bot → group "TapTapon Janitors" (chat ID in `.env`). Live alert sent 2026-10-14.
-2. Phase 5 — Admin dashboard (`dashboard/admin.html`, `js/admin.js`; reuse `css/styles.css`).
-3. Phase 6 — Firmware.
+2. Phase 6 — Firmware (ESP32 + Wokwi fake-sensor mode). Optional: admin "register card" form for /tags when the RC522 arrives.
 
 ## Notes for Claude
 - Local test server: `.claude/launch.json` config `static` (`py -m http.server 5599`). `python` isn't on the PATH for background jobs; use `py`.

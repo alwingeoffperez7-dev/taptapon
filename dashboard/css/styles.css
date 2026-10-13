@@ -55,3 +55,38 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .zero { color: var(--muted); font-weight: 400; }
 .me { background: var(--gold-soft); border-radius: 8px; padding-left: 8px; padding-right: 8px; }
 .rank { display: inline-block; width: 1.8em; color: var(--muted); }
+
+/* ---- Admin (laptop) ---- */
+.wrap.wide { max-width: 1100px; }
+.stack { display: grid; gap: 24px; }
+.narrow { width: 100%; max-width: 400px; margin: 40px auto; }
+.spaced { margin-top: 12px; }
+.narrow input { width: 100%; }
+.full { width: 100%; margin-top: 16px; }
+.topbar.split { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.btn-ghost { background: transparent; color: #fff; border-color: rgba(255, 255, 255, .4); padding: 8px 12px; margin-left: 8px; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.stat .label { font-weight: 600; font-size: .9rem; }
+.stat .value { font-size: 2.2rem; font-weight: 700; line-height: 1.2; }
+
+.bin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.bin-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.bin-head h3 { margin: 0; font-size: 1.05rem; }
+.bin.is-full { border: 2px solid var(--red); }
+.bin.is-offline { opacity: .7; }
+.fill-num { font-size: 2.2rem; font-weight: 700; margin: 8px 0 6px; line-height: 1; }
+.bar { height: 12px; background: #E8EFEB; border-radius: 999px; overflow: hidden; }
+.bar span { display: block; height: 100%; border-radius: inherit; transition: width .4s; }
+.bar .lo { background: var(--green); }
+.bar .mid { background: var(--gold); }
+.bar .hi { background: var(--red); }
+.badge { font-size: .75rem; font-weight: 700; letter-spacing: .05em; padding: 4px 10px; border-radius: 999px; }
+.badge-ok { background: #E3F3EA; color: var(--green); }
+.badge-full { background: var(--red); color: #fff; }
+.badge-offline { background: #E5E7E6; color: var(--muted); }
+
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+.count { display: inline-block; min-width: 1.6em; text-align: center; background: var(--gold); border-radius: 999px; padding: 1px 8px; font-size: .8rem; }
+.actions { display: flex; gap: 8px; flex-shrink: 0; }
+.actions button { padding: 8px 12px; }
