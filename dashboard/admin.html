@@ -51,6 +51,26 @@
           <ul id="decided" class="list"></ul>
         </div>
       </section>
+
+      <section class="two-col">
+        <form id="register" class="card">
+          <h2>Register a student card</h2>
+          <label for="uid">Card UID</label>
+          <input id="uid" placeholder="A1B2C3D4" autocomplete="off" required>
+          <p class="muted">Shown on the bin's Serial Monitor when an unknown card is tapped.</p>
+          <label for="reg-sid" class="spaced">Student number</label>
+          <input id="reg-sid" placeholder="2024-00123" autocomplete="off" required>
+          <label for="reg-name" class="spaced">Display name</label>
+          <input id="reg-name" placeholder="Juan D." maxlength="30" autocomplete="off">
+          <p class="muted">First name + last initial only. It's shown on the public leaderboard. Only needed for new students.</p>
+          <button class="btn-primary full">Register card</button>
+          <p id="register-msg" class="muted" role="status"></p>
+        </form>
+        <div class="card">
+          <h2>Registered cards <span id="tag-count" class="count">0</span></h2>
+          <ul id="tags" class="list"></ul>
+        </div>
+      </section>
     </div>
   </main>
 

@@ -2,7 +2,7 @@
 // Reads are public; the only write here (redemption status) is allowed for admins by the rules.
 import { db, auth } from "./firebase-config.js";
 import {
-  ref, query, limitToLast, onValue, get, update,
+  ref, query, limitToLast, onValue, get, update, remove, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
@@ -22,7 +22,11 @@ let students = {};
 let rewards = {};
 let redemptions = {};
 let deposits = [];
+let tags = {};
 let stopListening = [];
+
+const ID_PATTERN = /^\d{4}-\d{5}$/;
+const UID_PATTERN = /^([0-9A-F]{8}|[0-9A-F]{14})$/; // MIFARE cards have 4-byte or 7-byte UIDs
 
 // ---- Sign in ----
 $("login").addEventListener("submit", async (e) => {
@@ -68,7 +72,8 @@ onAuthStateChanged(auth, async (user) => {
   stopListening = [
     onValue(ref(db, "config"), (snap) => { config = snap.val() || {}; renderBins(); renderStats(); }),
     onValue(ref(db, "bins"), (snap) => { bins = snap.val() || {}; renderBins(); }),
-    onValue(ref(db, "students"), (snap) => { students = snap.val() || {}; renderRedemptions(); }),
+    onValue(ref(db, "students"), (snap) => { students = snap.val() || {}; renderRedemptions(); renderTags(); }),
+    onValue(ref(db, "tags"), (snap) => { tags = snap.val() || {}; renderTags(); }),
     onValue(ref(db, "rewards"), (snap) => { rewards = snap.val() || {}; renderRedemptions(); }),
     onValue(ref(db, "redemptions"), (snap) => { redemptions = snap.val() || {}; renderRedemptions(); }),
     onValue(query(ref(db, "deposits"), limitToLast(DEPOSIT_WINDOW)), (snap) => {
@@ -208,4 +213,52 @@ async function decide(id, status, buttons) {
     alert(`Couldn't save: ${err.message}`);
     buttons.forEach((b) => (b.disabled = false));
   }
+}
+
+// ---- Card registration ----
+$("register").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  // Serial monitors often print UIDs as "a1 b2 c3 d4" or "A1:B2:C3:D4"; store them as "A1B2C3D4".
+  const uid = $("uid").value.toUpperCase().replace(/[\s:-]/g, "");
+  const studentId = $("reg-sid").value.trim();
+  const name = $("reg-name").value.trim();
+
+  if (!UID_PATTERN.test(uid)) return setRegisterMessage("Card UID must be 8 or 14 letters/digits (0–9, A–F).", true);
+  if (!ID_PATTERN.test(studentId)) return setRegisterMessage("Student number must look like 2024-00123.", true);
+  const isNew = !students[studentId];
+  if (isNew && !name) return setRegisterMessage("New student: enter a display name, e.g. Juan D.", true);
+
+  const owner = tags[uid];
+  if (owner === studentId) return setRegisterMessage(`${uid} is already registered to ${studentId}.`);
+  if (owner && !confirm(`Card ${uid} belongs to ${owner}. Move it to ${studentId}?\n(Points stay with each student, not the card.)`)) return;
+
+  // One multi-path update: the card and the new student are saved together, or not at all.
+  const changes = { [`tags/${uid}`]: studentId };
+  if (isNew) changes[`students/${studentId}`] = { name, points: 0, totalBottles: 0, createdAt: serverTimestamp() };
+  try {
+    await update(ref(db), changes);
+    setRegisterMessage(`Registered ${uid} → ${studentId}${isNew ? ` (new student ${name})` : ""}.`);
+    $("register").reset();
+  } catch (err) {
+    setRegisterMessage(`Couldn't save: ${err.message}`, true);
+  }
+});
+
+function setRegisterMessage(text, isError = false) {
+  $("register-msg").textContent = text;
+  $("register-msg").classList.toggle("error", isError);
+}
+
+function renderTags() {
+  const list = Object.entries(tags).sort(([, a], [, b]) => a.localeCompare(b));
+  $("tag-count").textContent = list.length;
+  $("tags").replaceChildren(...list.map(([uid, studentId]) => {
+    const button = el("button", null, "Remove");
+    button.addEventListener("click", async () => {
+      if (!confirm(`Remove card ${uid}? Taps with it will stop earning points. ${studentId} keeps their points.`)) return;
+      try { await remove(ref(db, `tags/${uid}`)); } catch (err) { alert(`Couldn't remove: ${err.message}`); }
+    });
+    return row(uid, `${students[studentId]?.name ?? "Unknown student"} (${studentId})`, button);
+  }));
+  if (!list.length) $("tags").replaceChildren(emptyRow("No cards registered."));
 }

@@ -19,7 +19,8 @@ _Last updated: 2026-10-14_
 
 ## Next up (in order)
 1. ~~Telegram~~ ✅ bot @taptapon_qcu_bot → group "TapTapon Janitors" (chat ID in `.env`). Live alert sent 2026-10-14.
-2. Phase 6 — Firmware (ESP32 + Wokwi fake-sensor mode). Optional: admin "register card" form for /tags when the RC522 arrives.
+2. ~~Register-card form~~ ✅ committed. User registered E5F6A7B8 → new student 2025-00061 "Alwin P" (atomic student + tag write verified).
+3. Phase 6 — Firmware: write now, test in Wokwi (no RC522 part there → fake tap). Real calibration needs the parts.
 
 ## Notes for Claude
 - Local test server: `.claude/launch.json` config `static` (`py -m http.server 5599`). `python` isn't on the PATH for background jobs; use `py`.

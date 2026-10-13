@@ -139,6 +139,16 @@ For facility staff, on a laptop. Open <http://localhost:5599/dashboard/admin.htm
 | Approve a request the student can't afford | "Rejected by system: not enough points". Points unchanged. |
 | **Reject** one | "Rejected". Points unchanged, and the student's held points are released. |
 
+### Registering student cards
+Under **Register a student card**, enter the card's UID (spaces and colons are fine), the student number, and a display name for new students. A new student is created with 0 points in the same save. If the card already belongs to someone else, the form asks before moving it (for a lost or replaced card); points stay with the student. **Remove** unlinks a lost card.
+
+| Do this | You should see |
+|---|---|
+| UID `D4E5F6A7`, student `2024-00456` (Maria, giving her a second card), Register | "Registered D4E5F6A7 → 2024-00456". The card appears in the list. |
+| Simulator: reload, pick `D4E5F6A7`, Drop bottle | Maria gets +1 |
+| UID `E5F6A7B8`, new student `2024-01000`, name `Ana P.` | A new student with 0 points, plus the card |
+| UID `D4E5F6A7` again, but for `2024-01000` | A "Move it?" confirmation |
+
 ## Secrets — never commit these
 `.gitignore` already covers them:
 - `service/.env` (Telegram token, chat ID)
