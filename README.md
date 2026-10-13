@@ -7,7 +7,7 @@ A smart two-compartment trash bin for QCU. It alerts janitors when it's full and
 | Part | Folder | Status |
 |---|---|---|
 | Database (rules + seed) | `firebase/` | ✅ Phase 1 |
-| Simulator | `simulator/` | ⏳ Phase 2 |
+| Simulator | `simulator/` | ✅ Phase 2 |
 | Service (points + Telegram) | `service/` | ⏳ Phase 3 |
 | Student dashboard | `dashboard/index.html` | ⏳ Phase 4 |
 | Admin dashboard | `dashboard/admin.html` | ⏳ Phase 5 |
@@ -42,6 +42,29 @@ Everything stays on the free **Spark** plan.
 - The *Data* tab shows `config`, `bins`, `tags`, `students`, `rewards` and `roles`.
 - In the *Rules* tab, open **Rules Playground**. Simulate a **write** to `/students/2024-00123/points` with value `999` while authenticated as your admin UID. It should be **denied**, because only the service may change points.
 - Same playground: simulate an **unauthenticated read** of `/tags`. It should be **denied**.
+
+## Phase 2 — Simulator (virtual bin)
+
+A web page that writes to Firebase exactly like the ESP32 will. **Run it on your own laptop only, never host it.**
+
+### Run it
+1. Open the `taptapon` folder in VS Code.
+2. Right-click `simulator/index.html` → **Open with Live Server**.
+   (No Live Server? In a terminal in the `taptapon` folder, run `py -m http.server 5599`, then open <http://localhost:5599/simulator/>.)
+   Double-clicking the file does **not** work: browsers block ES modules on `file://`.
+3. Sign in with the **device** account from step 6.
+
+### Test it
+| Do this | You should see |
+|---|---|
+| Sign in | Log: `Signed in as device@… (device)` in green. A red message about `roles` means step 7 is wrong. |
+| Drag the fill slider to 85% and release | Log: `bins/bin-01 ← fill 85%…`. In the Firebase *Data* tab, `bins/bin-01/fillPercent` = 85. |
+| Click **Empty bin** | `fillPercent` goes back to 0. |
+| Pick tag `A1B2C3D4 → 2024-00123`, click **Drop bottle** | A new entry under `deposits` with `type: "pet"`, `count: 1`, `weightGrams: 18`. |
+| Pick **No tap**, drop a bottle | The deposit has no `tagUid` field. |
+| Click **Drop residual** | The deposit has `type: "residual"`, `count: 0`. |
+
+Points don't change yet. That's the service's job (Phase 3). Once the service is running, each deposit also gets a gold `service → …` line in the log.
 
 ## Secrets — never commit these
 `.gitignore` already covers them:

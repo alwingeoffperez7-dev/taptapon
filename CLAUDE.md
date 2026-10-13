@@ -216,7 +216,7 @@ taptapon/
 - **Firmware:** Arduino IDE or PlatformIO, ESP32 board package. Libraries: `MFRC522`, `ESP32Servo`, `HX711`, and `FirebaseClient` by Mobizt (the older "Firebase ESP32 Client" is deprecated).
 - **Auth:** Firebase Authentication (email/password). An account's role comes from `/roles/{uid}`, not from its email.
   - `admin` accounts → admin dashboard.
-  - one `device` account → used by the simulator and the ESP32 to write `bins` and `deposits`. Its password sits in the simulator's JS, so **the simulator is run locally only, never hosted**.
+  - one `device` account → used by the simulator and the ESP32 to write `bins` and `deposits`. You type its password into the simulator page (never into code). Still, **the simulator is run locally only, never hosted** — anyone with the device login can fake deposits.
   - Students do **not** log in for the prototype; they look up their points by student number (read-only).
 - **Cost:** everything must stay on free tiers (Firebase Spark plan). Do **not** use Cloud Functions (they need the paid Blaze plan) — that is why the service is a Node script we run on a laptop.
 
