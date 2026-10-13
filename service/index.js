@@ -84,6 +84,9 @@ async function checkBin(snap) {
   if (action === "reset") {
     await snap.ref.update({ status: "ok", alertSent: false });
     console.log(`bin ${snap.key}: emptied, alert re-armed`);
+    // Lets the other janitors know it's handled. A failed send here just gets logged, nothing to retry.
+    await sendTelegram(`✅ ${bin.name} (${bin.location}) was emptied. Salamat!`)
+      .catch((err) => console.error(`bin ${snap.key}: emptied message failed — ${err.message}`));
   }
   if (action !== "alert") return;
 

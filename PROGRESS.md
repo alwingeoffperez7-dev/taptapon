@@ -16,7 +16,7 @@ _Last updated: 2026-10-14_
     alert fires once at 85%, quiet at 90/70, re-arms at 10%. daily_cap covered by unit tests only.
 
 ## Next up (in order)
-1. Telegram: user creates a bot via @BotFather, gets the chat ID, and fills `.env`; then restart the service and test the alert (README Phase 3).
+1. ~~Telegram~~ ✅ bot @taptapon_qcu_bot → group "TapTapon Janitors" (chat ID in `.env`). Live alert sent 2026-10-14.
 2. Phase 4 — Student dashboard (`dashboard/index.html`, `student.js`, `css/styles.css`).
 3. Phase 5 — Admin dashboard. Phase 6 — Firmware.
 

@@ -173,6 +173,7 @@ Every part of the system reads and writes these exact paths and field names. **D
 - When `fillPercent ≥ fullThresholdPercent` and `alertSent` is false → send one Telegram message, set `status: "full"` and `alertSent: true`.
 - When `fillPercent < alertResetPercent` (bin emptied) → set `status: "ok"` and `alertSent: false`. Between the two values nothing changes (hysteresis).
 - Alert text: `🗑️ {name} ({location}) is {fillPercent}% full. Please empty it.`
+- On reset, also send: `✅ {name} ({location}) was emptied. Salamat!` (so janitors don't both walk to the same bin).
 
 ---
 

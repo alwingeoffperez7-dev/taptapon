@@ -92,7 +92,7 @@ A Node script that runs on a laptop. It's the **only** thing that changes points
 | Tag `A1B2C3D4`, drop 21 bottles in one day | the 21st gets `daily_cap`, +0 |
 | Slider to 85%, release | Console: `[Telegram not set up] 🗑️ Canteen Bin … 85% full` (once only) |
 | Slider to 70% | nothing happens (between 50% and 80%) |
-| **Empty bin** | Console: `emptied, alert re-armed` |
+| **Empty bin** | Console: `emptied, alert re-armed`; Telegram (once set up): `✅ … was emptied. Salamat!` |
 
 Unit tests for the rules (no Firebase needed): `npm test`.
 
