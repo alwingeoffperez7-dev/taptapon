@@ -1,31 +1,33 @@
 # Progress — TapTapon
 
-Read this first in a new session. Full design lives in `CLAUDE.md`; run/test steps in `README.md`.
+Read this first in a new session. Full design lives in `CLAUDE.md`, visual system in `DESIGN.md`, run/test steps in `README.md`.
 
 _Last updated: 2026-10-14_
 
-## Done
-- **Phase 1 — Foundation** ✅ committed `61af0a3`
-  - Firebase project `taptapon` (RTDB asia-southeast1) set up: seed imported, rules published, web config filled.
-  - Auth users `admin@taptapon.test` + `device@taptapon.test`; `/roles` node verified working.
-  - Rules verified from outside: public reads OK; tags/roles/points writes/fake deposits/₱0 redeem all denied.
-- **Phase 2 — Simulator** ✅ committed `28416f6`
-  - Tested by user: sign-in, fill slider, heartbeat, pet/residual/no-tap deposits all land in Firebase.
-- **Phase 3 — Service** ✅ committed (see git log)
-  - Runs live with key + `.env` (both git-ignored). Verified live: ok, no_tap, unknown_tag, residual, not_verified;
-    alert fires once at 85%, quiet at 90/70, re-arms at 10%. daily_cap covered by unit tests only.
-- **Phase 4 — Student dashboard** ✅ committed. Tested at phone width against live data: lookup, remembered ID, live points, deposits, held points, leaderboard. 
-- **Phase 5 — Admin dashboard** ✅ committed. User-tested live: approve → service deducts (21→11→1 for Juan), reject → no change, FULL badge + Telegram alert on bin-01, OFFLINE badge after 2 min. Shared helpers in `dashboard/js/ui.js`.
+## Status: all software phases done ✅
+| Part | Commit | Verified |
+|---|---|---|
+| Phase 1 — Firebase foundation | `61af0a3` | Rules checked from outside: public reads OK; tags/roles/points writes, fake deposits and ₱0 redemptions denied. `/roles` works. |
+| Phase 2 — Simulator | `28416f6` | User-tested: sign-in, fill, heartbeat, pet/residual/no-tap deposits. |
+| Phase 3 — Service + Telegram | `c71b9e9`, `605d259` | Live: ok, no_tap, unknown_tag, residual, not_verified, daily_cap. Alert fires once at ≥80%, re-arms below 50% with an "emptied" message. Bot @taptapon_qcu_bot → group "TapTapon Janitors". |
+| Phase 4 — Student page | `dab3165` | Phone width, live data: lookup, remembered ID, live points, held points, leaderboard. |
+| Phase 5 — Admin page | `3a57982`, `4250c0a` | User-tested: approve → service deducts (Juan 21→11→1), reject, FULL/OFFLINE, card registration (E5F6A7B8 → 2025-00061 "Alwin P"). |
+| UI redesign + logo | `f1e45e8`, `3d7ec3e` | "Barangay segregation signage" look (impeccable seed 9a73b8b1). Logo: original in `docs/`, web mark `dashboard/img/logo-mark.png`. |
+| Phase 6 — ESP32 firmware | `f5601ca` | Wokwi vs live Firebase: sign-in, heartbeat, card tap, IR count, load cell (cal 0.42), deposit → verdict back at the bin; not_verified (2 g) and daily_cap verified live. |
 
-## Next up (in order)
-1. ~~Telegram~~ ✅ bot @taptapon_qcu_bot → group "TapTapon Janitors" (chat ID in `.env`). Live alert sent 2026-10-14.
-2. ~~Register-card form~~ ✅ committed. User registered E5F6A7B8 → new student 2025-00061 "Alwin P" (atomic student + tag write verified).
-3. ~~Phase 6 — Firmware~~ ✅ committed. Runs in Wokwi against live Firebase (user-tested 2026-10-14): sign-in, fill heartbeat, card tap, IR count, load-cell weight (cal 0.42 for Wokwi 5 kg), deposit → service verdict back at the bin. Live-verified not_verified (2 g) and daily_cap (Juan at 20/20). REST API instead of FirebaseClient; residual flap button on GPIO 14; FAKE_RFID = type UID in Serial Monitor. Real hardware: calibrate load cells, measure binDepthCm, set FAKE_RFID 0.
+## Next up
+1. **Push to GitHub** (no remote yet; `gh` CLI not installed).
+2. **When the hardware arrives** (README → Phase 6 → "On real hardware"): `config.h` with campus Wi-Fi, `WIFI_CHANNEL 0`, `FAKE_RFID 0`; calibrate both load cells; measure the real depth into `/config/binDepthCm`; tap each real ID and register its UID on the admin page.
+3. Optional later: pin Google's root CA instead of `setInsecure()` in the firmware (`ponytail:` comment in `taptapon_bin.ino`); stats query with a `timestamp` index if deposits grow past ~1000 (`ponytail:` comment in `admin.js`).
 
-## UI redesign (2026-10-14) ✅ committed
-- "Barangay segregation signage" look (impeccable seed 9a73b8b1): `DESIGN.md`, `PRODUCT.md`, `.impeccable/surfaces/`. User's logo added: original in `docs/`, web mark `dashboard/img/logo-mark.png`.
+## Key decisions (beyond CLAUDE.md)
+- Firmware talks to Firebase over the REST API with built-in `HTTPClient` (no FirebaseClient library).
+- Residual flap is opened by a push button on GPIO 14 (added to CLAUDE.md §2).
+- One status LED on GPIO 21: 3 blinks + beep = points, solid = full, two low beeps = no points.
+- Service uses Node's `--env-file` (no dotenv). Deposits and redemptions are claimed before acting, so two running services never double-award.
 
 ## Notes for Claude
 - Local test server: `.claude/launch.json` config `static` (`py -m http.server 5599`). `python` isn't on the PATH for background jobs; use `py`.
-- Never ask the user to paste passwords or the service-account key into chat.
+- Never ask the user to paste passwords or the service-account key into chat. Secrets (git-ignored): `service/.env`, `service/serviceAccountKey.json`, `firmware/taptapon_bin/config.h`.
 - Live DB URL: `https://taptapon-default-rtdb.asia-southeast1.firebasedatabase.app` (public reads work via REST for quick checks).
+- Wokwi's 5 kg HX711 reads raw 0–2100 → calibration 0.42 raw/g.
