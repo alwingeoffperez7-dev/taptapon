@@ -40,11 +40,11 @@ a { color: var(--action); text-underline-offset: .2em; }
 
 /* ---- Brand ---- */
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--on-field); text-decoration: none; }
-.brand img { display: none; height: 36px; width: auto; }
-.brand.has-logo img { display: block; }
-.brand.has-logo .wordmark { display: none; }
-.wordmark { font-family: var(--stencil); font-weight: 800; font-size: 1.7rem; letter-spacing: .02em; line-height: 1; }
-.wordmark b { color: var(--lime); font-weight: 800; }
+/* The logo's bin mark sits on a pale tile so its dark lid stays visible on the green field.
+   The name is the logo's two-tone wordmark reversed for a dark background. */
+.brand img { box-sizing: content-box; width: 29px; height: 38px; padding: 5px 7px; background: var(--ground); border-radius: 8px; }
+.wordmark { font-family: var(--text); font-weight: 700; font-size: 1.65rem; letter-spacing: -.02em; line-height: 1; color: #5CC98A; }
+.wordmark b { color: var(--on-field); font-weight: 700; }
 .tagline { color: var(--on-field-muted); font-size: .92rem; }
 
 /* ---- The green field (header) ---- */

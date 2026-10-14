@@ -9,6 +9,7 @@ World: **barangay segregation signage**, the stenciled labels painted on MRF dru
 | `--field-deep` / `--field-line` | `#0A3826` / `#2A6A4E` | Empty ticks, dividers on the field |
 | `--on-field` / `--on-field-muted` | `#FFFFFF` / `#B9D6C4` | Text on the field |
 | `--lime` | `#C4EA5A` | **Reserved for points earned** (the big number, filled ticks, counts, selection) |
+| wordmark "Tap" | `#5CC98A` | Logo green lightened for the dark field |
 | `--ground` | `#EEF2EA` | Pale green concrete page ground |
 | `--paper` | `#FFFFFF` | Panels and inputs |
 | `--ink` / `--muted` | `#0B2E21` / `#4A5F54` | Text |
@@ -37,4 +38,7 @@ Admin bin cards draw fill as a painted drum (70×128px, same scale for every bin
 One moment: when a student's points go up, the number is "stamped" on (scale + blur settle, 0.55s ease-out). Everything respects `prefers-reduced-motion`.
 
 ## Logo
-`dashboard/img/logo.png` (the simulator reuses it). Until it exists, the stencil wordmark **TAP**<lime>**TAPON**</lime> shows.
+- Original: `docs/logo-original.jpg` (full logo on black: bin mark, two-tone "TapTapon", tagline). Use it as-is for print and slides.
+- Web: `dashboard/img/logo-mark.png` is the bin mark cut from the original with a transparent background. It sits on a pale `--ground` tile so its dark lid stays visible on the green field.
+- The name next to it is live text, the logo's two-tone wordmark reversed for a dark background: "Tap" `#5CC98A`, "Tapon" white, Atkinson Hyperlegible 700.
+- Tagline as written on the logo: "I-Tap. I-Tapon. Ma-Reward."

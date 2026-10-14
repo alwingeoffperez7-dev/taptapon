@@ -23,7 +23,7 @@ _Last updated: 2026-10-14_
 3. Phase 6 — Firmware: write now, test in Wokwi (no RC522 part there → fake tap). Real calibration needs the parts.
 
 ## UI redesign (2026-10-14) ✅ committed
-- New look ("barangay segregation signage", impeccable seed 9a73b8b1): `DESIGN.md`, `PRODUCT.md`, `.impeccable/surfaces/`. All 3 pages restyled; detector clean except the intentional FULL hazard stripes. Still waiting on the user's logo file at `dashboard/img/logo.png`.
+- "Barangay segregation signage" look (impeccable seed 9a73b8b1): `DESIGN.md`, `PRODUCT.md`, `.impeccable/surfaces/`. User's logo added: original in `docs/`, web mark `dashboard/img/logo-mark.png`.
 
 ## Notes for Claude
 - Local test server: `.claude/launch.json` config `static` (`py -m http.server 5599`). `python` isn't on the PATH for background jobs; use `py`.
