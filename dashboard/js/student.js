@@ -28,6 +28,7 @@ let studentId = null;
 let redemptions = {};
 let leaders = [];
 let stopListening = [];
+let shownPoints = null; // null = first render for this student, so no animation
 
 // Points tied up in pending requests can't be spent twice.
 function availablePoints() {
@@ -63,6 +64,7 @@ function setMessage(text, isError = false) {
 
 function showStudent(id) {
   stopListening.forEach((stop) => stop());
+  shownPoints = null;
   studentId = id;
   student = null;
   redemptions = {};
@@ -72,7 +74,7 @@ function showStudent(id) {
   stopListening = [
     onValue(ref(db, `students/${id}`), (snap) => {
       student = snap.val();
-      $("me").hidden = !student;
+      document.querySelectorAll(".needs-student").forEach((node) => (node.hidden = !student));
       setMessage(student ? "" : "Student number not found. Ask the TapTapon booth to register your ID.", !student);
       renderStudent();
       renderRewards();
@@ -90,15 +92,30 @@ function showStudent(id) {
 }
 
 // ---- Rendering ----
+
 function renderStudent() {
   if (!student) return;
+  const points = student.points ?? 0;
   $("name").textContent = student.name;
-  $("points").textContent = student.points ?? 0;
-  $("points-label").textContent = student.points === 1 ? "point" : "points";
+  $("sid-label").textContent = studentId;
+  $("points").textContent = points;
+  $("points-label").textContent = points === 1 ? "PT" : "PTS";
+  // The one animated moment: a new point gets stamped on, like a painted label.
+  if (shownPoints !== null && points > shownPoints) {
+    $("points").classList.remove("stamp");
+    void $("points").offsetWidth; // restart the animation
+    $("points").classList.add("stamp");
+  }
+  shownPoints = points;
+
   const bottles = student.totalBottles ?? 0;
   $("bottles").textContent = `${bottles} bottle${bottles === 1 ? "" : "s"}`;
+
+  // Today's cap as one tick per point, so "how many more today" is countable at a glance.
   const today = student.daily?.[manilaDay(Date.now())] ?? 0;
-  $("today").textContent = config.dailyPointCap ? `${today} / ${config.dailyPointCap}` : today;
+  const cap = config.dailyPointCap ?? 0;
+  $("today").textContent = cap ? `${today} / ${cap}` : today;
+  $("ticks").replaceChildren(...Array.from({ length: cap }, (_, i) => el("i", i < today ? "on" : "")));
 }
 
 function renderRewards() {
@@ -108,7 +125,7 @@ function renderRewards() {
   const available = availablePoints();
 
   $("rewards").replaceChildren(...list.map(([id, r]) => {
-    const button = el("button", "btn-gold", `${r.cost} pts`);
+    const button = el("button", "btn-action", `Redeem · ${r.cost}`);
     button.disabled = !student || available < r.cost;
     button.setAttribute("aria-label", `Redeem ${r.name} for ${r.cost} points`);
     button.addEventListener("click", () => redeem(id, r));
@@ -135,26 +152,29 @@ function renderRedemptions() {
   const list = Object.values(redemptions).sort((a, b) => b.timestamp - a.timestamp);
   $("redemptions").replaceChildren(...list.map((r) => {
     const status = r.reason === "insufficient_points" ? "Rejected: not enough points" : STATUS_TEXT[r.status];
-    return row(rewards[r.rewardId]?.name ?? r.rewardId, `${when(r.timestamp)} · ${status}`, `−${r.cost}`, r.status === "approved" ? "" : "zero");
+    return row(rewards[r.rewardId]?.name ?? r.rewardId, `${when(r.timestamp)} · ${status}`, `−${r.cost}`, r.status === "approved" ? "" : "none");
   }));
   if (!list.length) $("redemptions").replaceChildren(emptyRow("No redemptions yet."));
 }
 
 function renderDeposits(list) {
   $("deposits").replaceChildren(...list.map((d) => {
-    const title = d.type === "pet" ? `${d.count} bottle${d.count === 1 ? "" : "s"}` : "Residual waste";
+    const pet = d.type === "pet";
+    const title = pet ? `${d.count} bottle${d.count === 1 ? "" : "s"}` : "Residual waste";
     const earned = d.pointsAwarded > 0;
-    return row(title, `${when(d.timestamp)}${earned ? "" : ` · ${REASON_TEXT[d.reason] ?? d.reason}`}`,
-      earned ? `+${d.pointsAwarded}` : "+0", earned ? "plus" : "zero");
+    const li = row(title, `${when(d.timestamp)}${earned ? "" : ` · ${REASON_TEXT[d.reason] ?? d.reason}`}`,
+      earned ? `+${d.pointsAwarded}` : "+0", earned ? "earned" : "none");
+    li.prepend(el("span", `tag ${pet ? "pet" : "residual"}`, pet ? "PET" : "RESIDUAL"));
+    return li;
   }));
   if (!list.length) $("deposits").replaceChildren(emptyRow("Tap your ID at a WasteWise Bin to start earning!"));
 }
 
 function renderLeaderboard() {
   $("leaderboard").replaceChildren(...leaders.map((s, i) => {
-    const li = row("", undefined, `${s.points} pts`);
-    const title = li.querySelector(".title");
-    title.append(el("span", "rank", `${i + 1}.`), s.name);
+    const li = row(s.name, s.id === studentId ? "You" : undefined, s.points);
+    li.prepend(el("span", "rank", i + 1));
+    if (i < 3) li.classList.add("top");
     if (s.id === studentId) li.classList.add("me");
     return li;
   }));

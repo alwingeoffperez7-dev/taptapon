@@ -49,6 +49,7 @@ onAuthStateChanged(auth, async (user) => {
   stopListening.forEach((stop) => stop());
   stopListening = [];
   $("app").hidden = true;
+  $("stats").hidden = true;
   $("session").hidden = true;
   if (!user) {
     $("login").hidden = false;
@@ -66,6 +67,7 @@ onAuthStateChanged(auth, async (user) => {
   setLoginMessage("");
   $("login").hidden = true;
   $("app").hidden = false;
+  $("stats").hidden = false;
   $("session").hidden = false;
   $("who").textContent = user.email;
 
@@ -123,45 +125,63 @@ function renderStats() {
   $("stats").replaceChildren(
     stat("Bottles today", bottlesToday),
     stat("Bottles, last 7 days", bottlesWeek),
-    stat("Segregation rate", rate, "Real bottles ÷ all drops in the bottle port, last 7 days"),
-    stat("Active students", active.size, "Tapped an ID in the last 7 days"),
+    stat("Segregation rate", rate, "Real bottles ÷ bottle-port drops, 7 days"),
+    stat("Active students", active.size, "Tapped an ID, 7 days"),
   );
 }
 
-function stat(label, value, sub) {
-  const card = el("div", "card stat");
-  card.append(el("div", "label", label), el("div", "value", String(value)));
-  if (sub) card.append(el("div", "muted", sub));
-  return card;
+function stat(label, value, hint) {
+  const cell = el("div", "stat");
+  cell.append(el("div", "value", String(value)), el("div", "label", label));
+  if (hint) cell.append(el("div", "hint", hint));
+  return cell;
 }
 
 // ---- Bins ----
+// Each bin is a drum gauge at the same scale, with marks at the re-arm and alert thresholds.
+function drumGauge(level) {
+  const full = config.fullThresholdPercent ?? 80;
+  const reset = config.alertResetPercent ?? 50;
+  const gauge = el("div", "gauge");
+  gauge.setAttribute("role", "img");
+  gauge.setAttribute("aria-label", `${level}% full`);
+
+  const drum = el("div", `drum ${level >= full ? "hi" : level >= reset ? "mid" : ""}`);
+  const fill = el("div", "level");
+  fill.style.setProperty("--fill", level / 100); // scaleY, so the fill animates without re-layout
+  drum.append(fill);
+  const scale = el("div", "scale");
+  for (const mark of [reset, full]) {
+    const line = el("div", "mark");
+    line.style.bottom = `${mark}%`;
+    drum.append(line);
+    const label = el("span", null, mark);
+    label.style.bottom = `${mark}%`;
+    scale.append(label);
+  }
+  gauge.append(drum, scale);
+  return gauge;
+}
+
 function renderBins() {
   const cards = Object.entries(bins).map(([id, b]) => {
     const level = b.fillPercent ?? 0;
     const full = b.status === "full";
     const offline = Date.now() - (b.lastSeen ?? 0) > OFFLINE_AFTER_MS;
-    const badge = full ? ["FULL", "badge-full"] : offline ? ["OFFLINE", "badge-offline"] : ["OK", "badge-ok"];
+    const state = full ? ["FULL", "full"] : offline ? ["OFFLINE", "offline"] : ["OK", "ok"];
 
-    const card = el("article", `card bin${full ? " is-full" : ""}${offline ? " is-offline" : ""}`);
-    const head = el("div", "bin-head");
-    head.append(el("h3", null, b.name), el("span", `badge ${badge[1]}`, badge[0]));
-
-    const bar = el("div", "bar");
-    bar.setAttribute("role", "img");
-    bar.setAttribute("aria-label", `${level}% full`);
-    const fill = el("span", level >= config.fullThresholdPercent ? "hi" : level >= config.alertResetPercent ? "mid" : "lo");
-    fill.style.width = `${level}%`;
-    bar.append(fill);
-
+    const card = el("article", `panel bin${full ? " is-full" : ""}${offline ? " is-offline" : ""}`);
+    const info = el("div");
     const kg = ((b.totals?.weightGrams ?? 0) / 1000).toFixed(2);
-    card.append(
-      head,
-      el("p", "muted", `${b.location} · ${id}`),
-      el("p", "fill-num", `${level}%`),
-      bar,
-      el("p", "muted", `Last seen ${ago(b.lastSeen)} · ${b.totals?.bottles ?? 0} bottles · ${kg} kg`),
+    info.append(
+      el("h3", null, b.name),
+      el("p", "where", `${b.location} · ${id}`),
+      el("p", "pct", `${level}%`),
+      el("p", "facts", `Last seen ${ago(b.lastSeen)}`),
+      el("p", "facts", `${b.totals?.bottles ?? 0} bottles · ${kg} kg`),
+      el("span", `state ${state[1]}`, state[0]),
     );
+    card.append(drumGauge(level), info);
     return card;
   });
   $("bins").replaceChildren(...cards);
@@ -183,7 +203,7 @@ function renderRedemptions() {
       `${when(r.timestamp)} · costs ${r.cost} · has ${points} pts${short ? " (not enough)" : ""}`);
     if (short) li.querySelector(".sub").classList.add("error");
 
-    const approve = el("button", "btn-primary", "Approve");
+    const approve = el("button", "btn-action", "Approve");
     const reject = el("button", null, "Reject");
     approve.addEventListener("click", () => decide(r.id, "approved", [approve, reject]));
     reject.addEventListener("click", () => decide(r.id, "rejected", [approve, reject]));

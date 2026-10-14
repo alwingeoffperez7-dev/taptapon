@@ -22,6 +22,9 @@ _Last updated: 2026-10-14_
 2. ~~Register-card form~~ ✅ committed. User registered E5F6A7B8 → new student 2025-00061 "Alwin P" (atomic student + tag write verified).
 3. Phase 6 — Firmware: write now, test in Wokwi (no RC522 part there → fake tap). Real calibration needs the parts.
 
+## UI redesign (2026-10-14) ✅ committed
+- New look ("barangay segregation signage", impeccable seed 9a73b8b1): `DESIGN.md`, `PRODUCT.md`, `.impeccable/surfaces/`. All 3 pages restyled; detector clean except the intentional FULL hazard stripes. Still waiting on the user's logo file at `dashboard/img/logo.png`.
+
 ## Notes for Claude
 - Local test server: `.claude/launch.json` config `static` (`py -m http.server 5599`). `python` isn't on the PATH for background jobs; use `py`.
 - Never ask the user to paste passwords or the service-account key into chat.

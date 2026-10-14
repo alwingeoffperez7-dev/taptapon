@@ -237,7 +237,7 @@ taptapon/
 
 ## 6. Design direction
 
-- Brand: **TapTapon**. Colors: green `#1E8E4E`, dark green `#0F3D2E`, gold `#F5B800` (gold = points/rewards). Font: Inter.
+- Brand: **TapTapon**. Visual system lives in `DESIGN.md` (civic green `#0F4A33`, lime `#C4EA5A` = points earned, action green `#1A7A4C`; Big Shoulders Stencil for numbers/tags, Atkinson Hyperlegible for text). Logo goes in `dashboard/img/logo.png`.
 - The student view is used on **phones**, standing next to a bin — big text, fast to load, mobile-first.
 - The admin view is used on a **laptop** by facility staff — scannable bin cards with fill bars, clear "FULL" states.
 - Language: simple English; Filipino phrases welcome for flavor (e.g., "Salamat sa pag-segregate!").

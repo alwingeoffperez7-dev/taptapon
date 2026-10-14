@@ -4,73 +4,80 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TapTapon Simulator</title>
+  <meta name="theme-color" content="#0F4A33">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Stencil+Display:wght@800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../dashboard/css/styles.css">
   <style>
-    :root { --green: #1E8E4E; --dark: #0F3D2E; --gold: #F5B800; --bg: #F4F7F5; --line: #D6E2DB; }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--dark); }
-    header { background: var(--dark); color: #fff; padding: 16px; }
-    header h1 { margin: 0; font-size: 1.25rem; }
-    header h1 span { color: var(--gold); }
-    header p { margin: 4px 0 0; opacity: .8; font-size: .875rem; }
-    main { max-width: 640px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
-    .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-    .card[hidden] { display: none; }
-    h2 { margin: 0 0 12px; font-size: 1rem; }
-    .row { display: flex; justify-content: space-between; align-items: baseline; }
-    label { display: grid; gap: 4px; margin-bottom: 12px; font-size: .875rem; font-weight: 600; }
-    input, select, button { font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var(--line); }
-    input[type=range] { padding: 0; accent-color: var(--green); }
-    button { cursor: pointer; background: #fff; font-weight: 600; }
-    button.green { background: var(--green); color: #fff; border-color: var(--green); }
-    button.link { border: 0; padding: 0; color: var(--green); background: none; }
+    /* Simulator-only bits; everything else comes from the shared stylesheet. */
+    .sim .panel { padding: 16px; }
+    .sim label { margin-top: 4px; }
+    .sim select, .sim input[type=number] { margin-bottom: 12px; }
+    .fill-row { display: flex; align-items: baseline; justify-content: space-between; }
+    .fill-row .stencil { font-size: 2.4rem; line-height: 1; }
+    input[type=range] { min-height: 0; padding: 0; border: 0; background: none; accent-color: var(--action); margin: 10px 0 14px; }
     .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    #log { margin: 0; padding: 0; list-style: none; font: .8rem/1.5 ui-monospace, Consolas, monospace; max-height: 320px; overflow-y: auto; }
-    #log li { padding: 4px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
-    #log .ok { color: var(--green); }
-    #log .error { color: #C0392B; }
-    #log .service { color: #8A6A00; }
+    #log { margin: 0; padding: 0; list-style: none; font: .82rem/1.5 ui-monospace, Consolas, monospace; max-height: 340px; overflow-y: auto; }
+    #log li { padding: 5px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+    #log .ok { color: var(--action); }
+    #log .error { color: var(--red); font-weight: 700; }
+    #log .service { color: #6E5200; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>TapTapon <span>Virtual Bin</span></h1>
-    <p>Writes to Firebase exactly like the ESP32 will. Run locally only.</p>
+  <header class="field">
+    <div class="field-inner">
+      <div class="brandbar">
+        <a class="brand" href="./">
+          <img src="../dashboard/img/logo.png" alt="TapTapon" onload="this.parentElement.classList.add('has-logo')">
+          <span class="wordmark">TAP<b>TAPON</b></span>
+        </a>
+        <span class="tagline">Virtual bin · run locally only</span>
+      </div>
+    </div>
   </header>
 
-  <main>
-    <section id="login-card" class="card">
-      <h2>1. Sign in as the device</h2>
-      <form id="login-form">
-        <label>Email <input id="email" type="email" value="device@taptapon.test" required autocomplete="username"></label>
-        <label>Password <input id="password" type="password" required autocomplete="current-password"></label>
-        <button class="green">Sign in</button>
+  <main class="sheet sim">
+    <section id="login-card" class="block">
+      <h2>Sign in as the device</h2>
+      <form id="login-form" class="panel">
+        <label for="email">Email</label>
+        <input id="email" type="email" value="device@taptapon.test" required autocomplete="username">
+        <label for="password" style="margin-top:12px">Password</label>
+        <input id="password" type="password" required autocomplete="current-password">
+        <button class="btn-action" style="width:100%;margin-top:14px">Sign in</button>
       </form>
     </section>
 
-    <section id="bin-card" class="card" hidden>
-      <div class="row"><h2>2. Bin</h2><button id="logout" class="link">Sign out</button></div>
-      <label>Which bin <select id="bin"></select></label>
-      <label>Fill level: <span id="fill-label">0%</span>
+    <section id="bin-card" class="block" hidden>
+      <h2>Bin <button id="logout" class="btn-text" style="margin-left:auto;font-size:.9rem">Sign out</button></h2>
+      <div class="panel">
+        <label for="bin">Which bin</label>
+        <select id="bin"></select>
+        <div class="fill-row"><label for="fill">Fill level</label><span id="fill-label" class="stencil">0%</span></div>
         <input id="fill" type="range" min="0" max="100" value="0">
-      </label>
-      <button id="empty">Empty bin</button>
-    </section>
-
-    <section id="deposit-card" class="card" hidden>
-      <h2>3. Deposit</h2>
-      <label>Tap ID <select id="tag"></select></label>
-      <label>Weight added (g) <input id="weight" type="number" min="0" value="18"></label>
-      <div class="buttons">
-        <button id="drop-pet" class="green">Drop bottle</button>
-        <button id="drop-residual">Drop residual</button>
+        <button id="empty">Empty bin</button>
       </div>
     </section>
 
-    <section class="card">
+    <section id="deposit-card" class="block" hidden>
+      <h2>Deposit</h2>
+      <div class="panel">
+        <label for="tag">Tap ID</label>
+        <select id="tag"></select>
+        <label for="weight">Weight added (g)</label>
+        <input id="weight" type="number" min="0" value="18">
+        <div class="buttons">
+          <button id="drop-pet" class="btn-action">Drop bottle</button>
+          <button id="drop-residual">Drop residual</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
       <h2>Log</h2>
-      <ol id="log"></ol>
+      <div class="panel"><ol id="log"></ol></div>
     </section>
   </main>
 
