@@ -16,7 +16,7 @@ _Last updated: 2026-10-14_
 | Phase 6 — ESP32 firmware | `f5601ca` | Wokwi vs live Firebase: sign-in, heartbeat, card tap, IR count, load cell (cal 0.42), deposit → verdict back at the bin; not_verified (2 g) and daily_cap verified live. |
 
 ## Next up
-1. **Push to GitHub** (no remote yet; `gh` CLI not installed).
+1. ~~Push to GitHub~~ ✅ https://github.com/alwingeoffperez7-dev/taptapon (branch `main`). After each session: `git push`.
 2. **When the hardware arrives** (README → Phase 6 → "On real hardware"): `config.h` with campus Wi-Fi, `WIFI_CHANNEL 0`, `FAKE_RFID 0`; calibrate both load cells; measure the real depth into `/config/binDepthCm`; tap each real ID and register its UID on the admin page.
 3. Optional later: pin Google's root CA instead of `setInsecure()` in the firmware (`ponytail:` comment in `taptapon_bin.ino`); stats query with a `timestamp` index if deposits grow past ~1000 (`ponytail:` comment in `admin.js`).
 
