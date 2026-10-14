@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "author": "TapTapon",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-hc-sr04", "id": "ultrasonic", "top": -150, "left": -40, "attrs": { "distance": "45" } },
+    { "type": "wokwi-servo", "id": "flap", "top": -40, "left": 220, "attrs": {} },
+    { "type": "wokwi-hx711", "id": "petScale", "top": 230, "left": -330, "attrs": { "type": "5kg" } },
+    { "type": "wokwi-hx711", "id": "residualScale", "top": 230, "left": 210, "attrs": { "type": "5kg" } },
+    { "type": "wokwi-pushbutton", "id": "irBeam", "top": 40, "left": -240, "attrs": { "color": "green", "label": "IR beam (bottle)" } },
+    { "type": "wokwi-pushbutton", "id": "residualBtn", "top": 120, "left": -240, "attrs": { "color": "grey", "label": "Residual flap" } },
+    { "type": "wokwi-led", "id": "led", "top": 60, "left": 200, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 110, "left": 170, "attrs": { "value": "220" } },
+    { "type": "wokwi-buzzer", "id": "buzzer", "top": 150, "left": 260, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+
+    [ "ultrasonic:VCC", "esp:VIN", "red", [] ],
+    [ "ultrasonic:GND", "esp:GND.1", "black", [] ],
+    [ "ultrasonic:TRIG", "esp:D26", "orange", [] ],
+    [ "ultrasonic:ECHO", "esp:D27", "purple", [] ],
+
+    [ "flap:V+", "esp:VIN", "red", [] ],
+    [ "flap:GND", "esp:GND.2", "black", [] ],
+    [ "flap:PWM", "esp:D13", "orange", [] ],
+
+    [ "petScale:VCC", "esp:3V3", "red", [] ],
+    [ "petScale:GND", "esp:GND.1", "black", [] ],
+    [ "petScale:DT", "esp:RX2", "green", [] ],
+    [ "petScale:SCK", "esp:TX2", "blue", [] ],
+
+    [ "residualScale:VCC", "esp:3V3", "red", [] ],
+    [ "residualScale:GND", "esp:GND.2", "black", [] ],
+    [ "residualScale:DT", "esp:D4", "green", [] ],
+    [ "residualScale:SCK", "esp:D25", "blue", [] ],
+
+    [ "irBeam:1.r", "esp:D32", "green", [] ],
+    [ "irBeam:2.r", "esp:GND.1", "black", [] ],
+    [ "residualBtn:1.r", "esp:D14", "gray", [] ],
+    [ "residualBtn:2.r", "esp:GND.1", "black", [] ],
+
+    [ "esp:D21", "r1:1", "green", [] ],
+    [ "r1:2", "led:A", "green", [] ],
+    [ "led:C", "esp:GND.2", "black", [] ],
+
+    [ "buzzer:2", "esp:D33", "red", [] ],
+    [ "buzzer:1", "esp:GND.2", "black", [] ]
+  ],
+  "dependencies": {}
+}

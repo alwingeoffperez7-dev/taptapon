@@ -20,7 +20,7 @@ _Last updated: 2026-10-14_
 ## Next up (in order)
 1. ~~Telegram~~ ✅ bot @taptapon_qcu_bot → group "TapTapon Janitors" (chat ID in `.env`). Live alert sent 2026-10-14.
 2. ~~Register-card form~~ ✅ committed. User registered E5F6A7B8 → new student 2025-00061 "Alwin P" (atomic student + tag write verified).
-3. Phase 6 — Firmware: write now, test in Wokwi (no RC522 part there → fake tap). Real calibration needs the parts.
+3. ~~Phase 6 — Firmware~~ ✅ committed. Runs in Wokwi against live Firebase (user-tested 2026-10-14): sign-in, fill heartbeat, card tap, IR count, load-cell weight (cal 0.42 for Wokwi 5 kg), deposit → service verdict back at the bin. Live-verified not_verified (2 g) and daily_cap (Juan at 20/20). REST API instead of FirebaseClient; residual flap button on GPIO 14; FAKE_RFID = type UID in Serial Monitor. Real hardware: calibrate load cells, measure binDepthCm, set FAKE_RFID 0.
 
 ## UI redesign (2026-10-14) ✅ committed
 - "Barangay segregation signage" look (impeccable seed 9a73b8b1): `DESIGN.md`, `PRODUCT.md`, `.impeccable/surfaces/`. User's logo added: original in `docs/`, web mark `dashboard/img/logo-mark.png`.

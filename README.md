@@ -11,7 +11,7 @@ A smart two-compartment trash bin for QCU. It alerts janitors when it's full and
 | Service (points + Telegram) | `service/` | ✅ Phase 3 |
 | Student dashboard | `dashboard/index.html` | ✅ Phase 4 |
 | Admin dashboard | `dashboard/admin.html` | ✅ Phase 5 |
-| Firmware (ESP32) | `firmware/` | ⏳ Phase 6 |
+| Firmware (ESP32) | `firmware/` | ✅ Phase 6 (Wokwi) |
 
 ## Phase 1 — Firebase setup (one time)
 
@@ -148,6 +148,41 @@ Under **Register a student card**, enter the card's UID (spaces and colons are f
 | Simulator: reload, pick `D4E5F6A7`, Drop bottle | Maria gets +1 |
 | UID `E5F6A7B8`, new student `2024-01000`, name `Ana P.` | A new student with 0 points, plus the card |
 | UID `D4E5F6A7` again, but for `2024-01000` | A "Move it?" confirmation |
+
+## Phase 6 — Firmware (ESP32)
+
+`firmware/taptapon_bin/`: `taptapon_bin.ino` (the sketch), `config.example.h`, `diagram.json` (Wokwi wiring), `libraries.txt`.
+
+### Run it in Wokwi (no hardware needed)
+1. Keep the service running (`npm start` in `service/`) and open the admin page.
+2. Go to <https://wokwi.com>, sign in, and start a **new ESP32 project**.
+3. Replace the project's files with ours:
+   - `sketch.ino` ← contents of `taptapon_bin.ino`
+   - `diagram.json` ← contents of `diagram.json`
+   - Add a file `libraries.txt` ← contents of `libraries.txt`
+   - Add a file `config.h` ← contents of `config.example.h`, then put the **device** password in `DEVICE_PASSWORD`
+4. Press ▶. The Serial Monitor should show `connected`, `Config: depth 45 cm…`, `Signed in as the device account`, then `Ready`.
+   ⚠️ Keep the Wokwi project **private**, because `config.h` holds the device password.
+
+### Test it
+| Do this in Wokwi | You should see |
+|---|---|
+| Click the ultrasonic sensor and set distance **9 cm** | Serial: `Fill 80%`. Admin: Canteen bin turns **FULL**. Telegram alert arrives. |
+| Set distance back to **45 cm** | Fill 0%, alert re-armed, "emptied" message on Telegram |
+| Type `A1B2C3D4` in the Serial Monitor + Enter | `Card tapped: A1B2C3D4` and a beep |
+| Click the PET load cell, set **0.02 kg**, then press **IR beam** | `Bottle counted (1)`, then after 1.5 s `Deposit … pet x1, ~20 g`, `service: ok`, 3 LED blinks. Juan's points +1. |
+| Press **IR beam** without adding weight | `service: not_verified`, two low beeps |
+| Press **Residual flap** (servo swings), raise the residual load cell weight during the 5 s | A `residual` deposit |
+| Stop the simulation, wait 2+ min | Admin shows the bin **OFFLINE** |
+
+Wokwi's 5 kg load cell needs `PET_CALIBRATION 0.42` (raw 0–2100 = 0–5 kg). If the weight still reads wrong, the formula is: new value = old value × reported grams ÷ real grams.
+
+### On real hardware (when the parts arrive)
+1. Arduino IDE → install the **esp32** board package, plus the libraries **ESP32Servo**, **HX711** (bogde) and **MFRC522**.
+2. Copy `config.example.h` to `config.h` next to the sketch. Set your Wi-Fi, `WIFI_CHANNEL 0`, `FAKE_RFID 0`, and the device password.
+3. Wire per CLAUDE.md §2. Remember the 1 kΩ/2 kΩ divider on ECHO.
+4. Calibrate both load cells with a known weight, and measure the real inside depth into `/config/binDepthCm`.
+5. Power on with **both compartments empty** (the scales zero themselves at boot).
 
 ## Secrets — never commit these
 `.gitignore` already covers them:
