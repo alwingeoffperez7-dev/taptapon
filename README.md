@@ -186,6 +186,20 @@ Full build guide (parts list, wiring, calibration, booth setup): [docs/BUILD.md]
 4. Calibrate both load cells with a known weight, and measure the real inside depth into `/config/binDepthCm`.
 5. Power on with **both compartments empty** (the scales zero themselves at boot).
 
+## Online (Firebase Hosting)
+
+The student and admin pages are hosted for free on Firebase Hosting:
+- Student page: **https://taptapon.web.app** (QR code for the booth: `docs/qr-student-page.png` / `.svg`)
+- Admin page: **https://taptapon.web.app/admin.html** (admin login required)
+
+Only the `dashboard/` folder is published (`firebase.json`). The simulator is never hosted.
+
+After changing anything in `dashboard/`, publish it again from the `taptapon` folder (PowerShell needs `npx.cmd`, not `npx`):
+```
+npx.cmd -y firebase-tools@latest deploy --only hosting
+```
+The points service still has to run on a laptop (`npm start` in `service/`) for points and Telegram alerts.
+
 ## Secrets — never commit these
 `.gitignore` already covers them:
 - `service/.env` (Telegram token, chat ID)

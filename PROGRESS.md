@@ -15,6 +15,11 @@ _Last updated: 2026-10-14_
 | UI redesign + logo | `f1e45e8`, `3d7ec3e` | "Barangay segregation signage" look (impeccable seed 9a73b8b1). Logo: original in `docs/`, web mark `dashboard/img/logo-mark.png`. |
 | Phase 6 — ESP32 firmware | `f5601ca` | Wokwi vs live Firebase: sign-in, heartbeat, card tap, IR count, load cell (cal 0.42), deposit → verdict back at the bin; not_verified (2 g) and daily_cap verified live. |
 
+## Online
+- Hosted 2026-10-22 on Firebase Hosting: https://taptapon.web.app (student), /admin.html (admin). Only `dashboard/` is published; simulator returns 404 (by design).
+- Booth QR: `docs/qr-student-page.png` / `.svg` → https://taptapon.web.app/
+- Redeploy after dashboard changes: `npx.cmd -y firebase-tools@latest deploy --only hosting` (CLI is logged in on this laptop).
+
 ## Next up
 1. ~~Push to GitHub~~ ✅ https://github.com/alwingeoffperez7-dev/taptapon (branch `main`). After each session: `git push`.
 2. **Build the physical prototype for the booth** (prof approved the proposal, 2026-10-22): follow `docs/BUILD.md` (parts list, layout, wiring, one-part-at-a-time bring-up, load-cell calibration, booth setup). Hardware steps: `config.h` with campus Wi-Fi, `WIFI_CHANNEL 0`, `FAKE_RFID 0`; calibrate both load cells; measure the real depth into `/config/binDepthCm`; tap each real ID and register its UID on the admin page.
