@@ -178,6 +178,8 @@ Under **Register a student card**, enter the card's UID (spaces and colons are f
 Wokwi's 5 kg load cell needs `PET_CALIBRATION 0.42` (raw 0–2100 = 0–5 kg). If the weight still reads wrong, the formula is: new value = old value × reported grams ÷ real grams.
 
 ### On real hardware (when the parts arrive)
+Full build guide (parts list, wiring, calibration, booth setup): [docs/BUILD.md](docs/BUILD.md).
+
 1. Arduino IDE → install the **esp32** board package, plus the libraries **ESP32Servo**, **HX711** (bogde) and **MFRC522**.
 2. Copy `config.example.h` to `config.h` next to the sketch. Set your Wi-Fi, `WIFI_CHANNEL 0`, `FAKE_RFID 0`, and the device password.
 3. Wire per CLAUDE.md §2. Remember the 1 kΩ/2 kΩ divider on ECHO.

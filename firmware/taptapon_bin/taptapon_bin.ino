@@ -92,7 +92,9 @@ bool signIn() {
   int code = request("POST", String("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=") +
                      FIREBASE_API_KEY, body, res);
   if (code != 200) {
-    Serial.printf("Sign-in failed (HTTP %d). Check DEVICE_EMAIL / DEVICE_PASSWORD in config.h\n", code);
+    // Negative codes are network failures (couldn't reach Google); 400 means wrong email/password.
+    if (code < 0) Serial.printf("Sign-in failed: network error (%s). Retrying in 10 s\n", res.c_str());
+    else Serial.printf("Sign-in failed (HTTP %d). Check DEVICE_EMAIL / DEVICE_PASSWORD in config.h\n", code);
     return false;
   }
   idToken = jsonString(res, "idToken");
@@ -103,7 +105,13 @@ bool signIn() {
 
 // Database URL for a path, with a fresh token. Never print it: it contains the token.
 String dbUrl(const String& path) {
-  if (idToken.isEmpty() || millis() - tokenAt > TOKEN_LIFETIME_MS) signIn();
+  static unsigned long lastAttemptAt = 0;
+  bool needToken = idToken.isEmpty() || millis() - tokenAt > TOKEN_LIFETIME_MS;
+  // Retry at most every 10 s, so a network outage doesn't block the bin on sign-in attempts.
+  if (needToken && (lastAttemptAt == 0 || millis() - lastAttemptAt > 10000)) {
+    lastAttemptAt = millis();
+    signIn();
+  }
   return String(FIREBASE_DB_URL) + path + ".json?auth=" + idToken;
 }
 
