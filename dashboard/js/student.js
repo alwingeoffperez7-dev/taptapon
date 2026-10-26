@@ -39,10 +39,17 @@ function availablePoints() {
 }
 
 // ---- Always-on data ----
-onValue(ref(db, "config"), (snap) => { config = snap.val() || {}; renderStudent(); });
+onValue(ref(db, "config"), (snap) => {
+  config = snap.val() || {};
+  const ppb = config.pointsPerBottle ?? 1;
+  $("how-ppb").textContent = `${ppb} point${ppb === 1 ? "" : "s"}`;
+  $("how-cap").textContent = config.dailyPointCap ?? 20;
+  renderStudent();
+});
 onValue(ref(db, "rewards"), (snap) => { rewards = snap.val() || {}; renderRewards(); });
-onValue(query(ref(db, "students"), orderByChild("points"), limitToLast(10)), (snap) => {
-  leaders = toList(snap).reverse().filter((s) => s.points > 0);
+// Ranked by bottles, not spendable points: redeeming a reward shouldn't knock you off the board.
+onValue(query(ref(db, "students"), orderByChild("totalBottles"), limitToLast(10)), (snap) => {
+  leaders = toList(snap).reverse().filter((s) => s.totalBottles > 0);
   renderLeaderboard();
 });
 
@@ -55,6 +62,12 @@ $("lookup").addEventListener("submit", (e) => {
     return;
   }
   showStudent(id);
+});
+
+$("change").addEventListener("click", () => {
+  $("lookup").hidden = false;
+  $("sid").select();
+  $("sid").focus();
 });
 
 function setMessage(text, isError = false) {
@@ -75,6 +88,8 @@ function showStudent(id) {
     onValue(ref(db, `students/${id}`), (snap) => {
       student = snap.val();
       document.querySelectorAll(".needs-student").forEach((node) => (node.hidden = !student));
+      $("lookup").hidden = !!student;
+      $("how").hidden = !!student;
       setMessage(student ? "" : "Student number not found. Ask the TapTapon booth to register your ID.", !student);
       renderStudent();
       renderRewards();
@@ -82,10 +97,11 @@ function showStudent(id) {
     }),
     onValue(query(ref(db, "redemptions"), orderByChild("studentId"), equalTo(id)), (snap) => {
       redemptions = snap.val() || {};
+      renderSpent();
       renderRedemptions();
       renderRewards();
     }),
-    onValue(query(ref(db, "deposits"), orderByChild("studentId"), equalTo(id), limitToLast(10)), (snap) => {
+    onValue(query(ref(db, "deposits"), orderByChild("studentId"), equalTo(id), limitToLast(5)), (snap) => {
       renderDeposits(toList(snap).reverse());
     }),
   ];
@@ -116,6 +132,15 @@ function renderStudent() {
   const cap = config.dailyPointCap ?? 0;
   $("today").textContent = cap ? `${today} / ${cap}` : today;
   $("ticks").replaceChildren(...Array.from({ length: cap }, (_, i) => el("i", i < today ? "on" : "")));
+}
+
+// Explains why "24 bottles" can sit next to "3 PTS": the rest went to rewards.
+function renderSpent() {
+  const spent = Object.values(redemptions)
+    .filter((r) => r.status === "approved")
+    .reduce((sum, r) => sum + r.cost, 0);
+  $("spent").textContent = `${spent} point${spent === 1 ? "" : "s"} spent on rewards`;
+  $("spent").hidden = spent === 0;
 }
 
 function renderRewards() {
@@ -172,7 +197,7 @@ function renderDeposits(list) {
 
 function renderLeaderboard() {
   $("leaderboard").replaceChildren(...leaders.map((s, i) => {
-    const li = row(s.name, s.id === studentId ? "You" : undefined, s.points);
+    const li = row(s.name, s.id === studentId ? "You" : undefined, s.totalBottles);
     li.prepend(el("span", "rank", i + 1));
     if (i < 3) li.classList.add("top");
     if (s.id === studentId) li.classList.add("me");

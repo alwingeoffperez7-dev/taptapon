@@ -43,7 +43,7 @@
 
     "students": {
       ".read": true,
-      ".indexOn": ["points"],
+      ".indexOn": ["points", "totalBottles"],
       "$studentId": {
         ".write": "auth != null && root.child('roles/' + auth.uid).val() === 'admin'",
         "name": { ".validate": "newData.isString() && newData.val().length <= 30" },

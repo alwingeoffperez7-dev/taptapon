@@ -233,7 +233,7 @@ taptapon/
 - Only the service (admin SDK, bypasses rules) writes `points`, `daily`, `totalBottles`, `totals`, `processed`, `status`/`alertSent` on bins. Rules reject any client change to `points`, `totalBottles` and `daily` — even from admins.
 - Only admins can write `config`, `bins` (name/location), `students`, `tags`, `rewards`, and move a redemption from `pending` to `approved`/`rejected`.
 - Anyone can create a `redemptions` entry with `status: "pending"` whose `cost` matches the active reward.
-- Indexes: `students` on `points`; `deposits` on `studentId`, `processed`; `redemptions` on `studentId`, `status`.
+- Indexes: `students` on `points` and `totalBottles` (the student leaderboard ranks by bottles, so redeeming never drops your rank); `deposits` on `studentId`, `processed`; `redemptions` on `studentId`, `status`.
 
 ---
 

@@ -84,6 +84,10 @@ button:disabled { cursor: not-allowed; color: var(--muted); background: transpar
 .btn-ghost:hover { border-color: var(--on-field-muted); }
 .btn-text { min-height: 0; padding: 4px 0; border: 0; background: none; color: var(--action); text-decoration: underline; text-underline-offset: .2em; }
 
+.how { margin: 18px 0 0; padding-left: 1.4em; color: var(--on-field-muted); font-size: .95rem; }
+.how li + li { margin-top: 4px; }
+.how li::marker { font-family: var(--stencil); font-weight: 800; color: var(--lime); }
+.how span { color: var(--on-field); font-weight: 700; }
 .lookup { margin-top: 22px; }
 .lookup label { color: var(--on-field); }
 .inline { display: flex; gap: 8px; }
@@ -97,6 +101,10 @@ button:disabled { cursor: not-allowed; color: var(--muted); background: transpar
 .score { margin-top: 22px; padding-top: 20px; border-top: 2px solid var(--field-line); }
 .who { color: var(--on-field-muted); font-size: 1rem; }
 .who strong { color: var(--on-field); font-size: 1.2rem; }
+.who .btn-text { margin-left: 6px; color: var(--on-field-muted); font-size: .92rem; }
+.who .btn-text:hover { color: var(--on-field); }
+.lookup[hidden] + .score { padding-top: 0; border-top: 0; } /* the form collapses into "Not you?" once a student is shown */
+.spent { margin: -8px 0 14px; color: var(--on-field-muted); font-size: .92rem; }
 .points { display: flex; align-items: baseline; gap: 10px; margin: 2px 0 14px; color: var(--lime); }
 .points .stencil { font-size: clamp(5rem, 28vw, 7.5rem); line-height: .9; }
 .points .unit { font-size: 1.9rem; color: var(--on-field); }

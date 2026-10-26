@@ -21,6 +21,12 @@
         <span class="tagline">I-Tap. I-Tapon. Ma-Reward.</span>
       </div>
 
+      <ol id="how" class="how">
+        <li>Tap your school ID on a WasteWise Bin.</li>
+        <li>Drop one PET bottle at a time into the round port.</li>
+        <li>Get <span id="how-ppb">1 point</span> per bottle, up to <span id="how-cap">20</span> a day.</li>
+      </ol>
+
       <form id="lookup" class="lookup">
         <label for="sid">Student number</label>
         <div class="inline">
@@ -31,8 +37,9 @@
       </form>
 
       <section class="score needs-student" aria-live="polite" hidden>
-        <p class="who"><strong id="name"></strong> · <span id="sid-label" class="num"></span></p>
+        <p class="who"><strong id="name"></strong> · <span id="sid-label" class="num"></span> <button id="change" class="btn-text" type="button">Not you?</button></p>
         <p class="points"><span id="points" class="stencil">0</span><span id="points-label" class="unit stencil">PTS</span></p>
+        <p id="spent" class="spent" hidden></p>
         <div class="cap-head"><span>Earned today</span><strong id="today" class="num">0 / 20</strong></div>
         <div id="ticks" class="ticks" aria-hidden="true"></div>
         <p class="meta"><strong id="bottles">0 bottles</strong> recycled. Salamat sa pag-segregate!</p>
@@ -41,6 +48,12 @@
   </header>
 
   <main class="sheet">
+    <!-- First, because a student standing at the bin wants proof the bottle counted. -->
+    <section class="block needs-student" hidden>
+      <h2>Recent deposits</h2>
+      <div class="panel"><ul id="deposits" class="list"></ul></div>
+    </section>
+
     <section class="block needs-student" hidden>
       <h2>Rewards</h2>
       <div class="panel"><ul id="rewards" class="list"></ul></div>
@@ -51,13 +64,9 @@
       <div class="panel"><ul id="redemptions" class="list"></ul></div>
     </section>
 
-    <section class="block needs-student" hidden>
-      <h2>Recent deposits</h2>
-      <div class="panel"><ul id="deposits" class="list"></ul></div>
-    </section>
-
     <section class="block">
       <h2>Top 10 recyclers</h2>
+      <p class="hint-line">Ranked by bottles recycled, so redeeming rewards never costs you your spot.</p>
       <div class="panel"><ol id="leaderboard" class="list"></ol></div>
     </section>
   </main>
