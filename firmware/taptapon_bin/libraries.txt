@@ -1,3 +1,5 @@
 ESP32Servo
 HX711
 MFRC522
+Adafruit SSD1306
+Adafruit GFX Library

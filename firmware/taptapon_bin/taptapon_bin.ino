@@ -6,6 +6,9 @@
 #include <HTTPClient.h>
 #include <ESP32Servo.h>
 #include <HX711.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 #include "config.h"
 #if !FAKE_RFID
 #include <SPI.h>
@@ -20,7 +23,8 @@ const int PIN_HX1_DT = 16, PIN_HX1_SCK = 17;   // load cell #1: recyclables (PET
 const int PIN_HX2_DT = 4, PIN_HX2_SCK = 25;    // load cell #2: residual
 const int PIN_LED = 2, PIN_BUZZER = 33;     // GPIO 2 = also the board's onboard LED
 const int PIN_RESIDUAL_BTN = 14;               // press to open the residual flap
-const int PIN_RC522_SS = 5, PIN_RC522_RST = 15;  // 21/22 stay free for an I2C OLED
+const int PIN_RC522_SS = 5, PIN_RC522_RST = 15;
+const int PIN_OLED_SDA = 21, PIN_OLED_SCL = 22;  // front screen (optional), ESP32 default I2C pins
 
 // ---- Timing ----
 const unsigned long MEASURE_EVERY_MS = 2000;
@@ -72,6 +76,49 @@ float petBaseline = 0, residualBaseline = 0;
 unsigned long lastMeasureAt = 0, lastReportAt = 0;
 int lastReportedFill = -100;
 bool binFull = false;
+
+// ---------------------------------------------------------------- Front screen (optional OLED)
+// A 0.96" SSD1306 on the front panel tells the student what to do and what they earned.
+// If it isn't connected, every screen call simply does nothing.
+Adafruit_SSD1306 oled(128, 64, &Wire, -1);
+bool haveOled = false;
+int shownFill = -1;                // fill % shown on the idle screen
+unsigned long messageUntil = 0;    // while a message is showing, the idle screen waits
+bool idleShown = false;
+
+// One screen: small top line, big middle text (max 10 characters per line, \n for a 2nd line),
+// small bottom line (max 21 characters). holdMs = how long before the idle screen returns.
+void screen(const char* top, const char* big, const char* bottom, unsigned long holdMs) {
+  if (!haveOled) return;
+  oled.clearDisplay();
+  oled.setTextColor(SSD1306_WHITE);
+  oled.setTextSize(1); oled.setCursor(0, 0);  oled.print(top);
+  oled.setTextSize(2); oled.setCursor(0, 18); oled.print(big);
+  oled.setTextSize(1); oled.setCursor(0, 55); oled.print(bottom);
+  oled.display();
+  messageUntil = millis() + holdMs;
+  idleShown = false;
+}
+
+// The resting screen between students: what to do, and how full the bin is.
+void showIdle() {
+  if (!haveOled || idleShown || millis() < messageUntil) return;
+  char bottom[24];
+  snprintf(bottom, sizeof bottom, "Bin %d%% full", max(shownFill, 0));
+  if (binFull) screen("TapTapon", "BIN FULL", "Use another bin", 0);
+  else screen("TapTapon   I-Tap!", "Tap your\nID card", bottom, 0);
+  idleShown = true;
+}
+
+// The service's verdict for a tapped deposit, in words a student understands.
+void showVerdictScreen(const String& reason) {
+  if (reason == "ok")                screen("Salamat!", "+1 POINT!", "Keep segregating!", 5000);
+  else if (reason == "daily_cap")    screen("Thank you!", "Daily max\nreached", "Come back tomorrow", 5000);
+  else if (reason == "unknown_tag")  screen("Card not known", "Card not\nregistered", "Register at the booth", 5000);
+  else if (reason == "not_verified") screen("Hmm...", "Not\nverified", "Drop a real bottle", 5000);
+  else if (reason == "residual")     screen("Salamat!", "Thanks!", "Residual: no points", 5000);
+  else                               screen("Result", reason.c_str(), "", 5000);
+}
 
 // ---------------------------------------------------------------- HTTP + Firebase REST
 
@@ -188,6 +235,7 @@ void measureFill() {
   int fill = constrain((int)round((binDepthCm - d) / binDepthCm * 100), 0, 100);  // CLAUDE.md §3 formula
   binFull = fill >= fullThreshold;
   showFullLed();
+  if (fill != shownFill) { shownFill = fill; idleShown = false; }  // refresh the idle screen
 
   // Report on the heartbeat, or right away when the level really changed.
   if (millis() - lastReportAt < HEARTBEAT_MS && abs(fill - lastReportedFill) < 2) return;
@@ -215,10 +263,12 @@ void showVerdict(const String& key) {
     if (request("GET", dbUrl(String("/deposits/") + key + "/reason"), "", res) != 200 || res == "null") continue;
     res.replace("\"", "");
     Serial.printf("  service: %s\n", res.c_str());
+    showVerdictScreen(res);
     if (res == "ok") celebrate(); else grumble();
     return;
   }
   Serial.println("  service didn't answer (is it running?)");
+  screen("Saved!", "Bottle\nsaved", "Points appear soon", 4000);
 }
 
 // Weight from the median of 7 readings: one misread from electrical noise can't turn an 18 g
@@ -255,6 +305,7 @@ bool sendDeposit(const char* type, int count, float grams) {
   String key = jsonString(res, "name");
   Serial.printf("Deposit %s: %s x%d, %.0f g, tag %s\n", key.c_str(), type, count, grams, tapped ? tappedUid.c_str() : "none");
   if (tapped) showVerdict(key);  // no tap = no points to celebrate
+  else if (strcmp(type, "pet") == 0) screen("Bottle counted", "No tap =\nno point", "Tap ID before drop", 4000);
   return true;
 }
 
@@ -272,10 +323,14 @@ void checkBottles() {
     lastBeamAt = millis();
     beep(30, 3000);
     Serial.printf("Bottle counted (%d)\n", pendingBottles);
+    char top[22];
+    snprintf(top, sizeof top, "Bottles: %d", pendingBottles);
+    screen(top, "Counted!", "Checking points...", 10000);
   }
   if (rejected > 0) {
     Serial.printf("Ignored: beam blocked %lu ms (longer than %lu ms, not a falling bottle)\n", rejectedMs, BEAM_MAX_MS);
     beep(150, 400);
+    screen("Hmm...", "Bottles\nonly!", "Drop it, don't hold", 3000);
   }
 
   bool broken = digitalRead(PIN_IR) == LOW;
@@ -294,6 +349,7 @@ void checkBottles() {
 void checkResidualButton() {
   if (digitalRead(PIN_RESIDUAL_BTN) != LOW) return;
   Serial.println("Residual flap open");
+  screen("Residual side", "Flap open", "Drop your trash now", FLAP_OPEN_MS + 1000);
   flap.write(90);
   delay(FLAP_OPEN_MS);
   flap.write(0);
@@ -334,6 +390,9 @@ void checkTap() {
   tappedAt = millis();
   Serial.printf("Card tapped: %s (register unknown cards on the admin page)\n", uid.c_str());
   beep(80, 1800);
+  char top[22];
+  snprintf(top, sizeof top, "Card %s", uid.c_str());
+  screen(top, "Drop a\nbottle", "within 30 seconds", TAP_VALID_MS);
 }
 
 // ---------------------------------------------------------------- Setup / loop
@@ -370,6 +429,11 @@ void setup() {
   rfid.PCD_Init();
 #endif
 
+  Wire.begin(PIN_OLED_SDA, PIN_OLED_SCL);
+  haveOled = oled.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  Serial.println(haveOled ? "Front screen: OK" : "Front screen: not connected (that's fine)");
+  screen("TapTapon", "Starting", "Connecting Wi-Fi...", 0);
+
   Serial.printf("Connecting to %s", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD, WIFI_CHANNEL);
   while (WiFi.status() != WL_CONNECTED) { delay(250); Serial.print("."); }
@@ -383,6 +447,7 @@ void setup() {
 void loop() {
   if (WiFi.status() != WL_CONNECTED) WiFi.reconnect();  // events are skipped while offline
   checkTap();
+  showIdle();
   checkBottles();
   checkResidualButton();
   if (millis() - lastMeasureAt > MEASURE_EVERY_MS) {

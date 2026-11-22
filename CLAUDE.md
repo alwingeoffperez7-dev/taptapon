@@ -64,7 +64,7 @@ The bin and simulator **only record what happened** (a deposit, a fill reading).
 | Status LED | OUT | 2 (same pin as the board's onboard LED) |
 | Buzzer | OUT | 33 |
 | Residual flap button | IN (INPUT_PULLUP, pressed = LOW) | 14 |
-| OLED 0.96" SSD1306 (I2C, optional) | SDA, SCL | 21, 22 (ESP32 default I2C; used by `firmware/part_test`, free for a future bin display) |
+| OLED 0.96" SSD1306 (I2C, optional) | SDA, SCL | 21, 22 (front-panel screen: "Tap your ID" → "Drop a bottle" → "+1 POINT!", fill %, BIN FULL; bin works without it) |
 
 \* ECHO goes through a 1 kΩ / 2 kΩ voltage divider (5 V → 3.3 V). Servo and HC-SR04 run on the 5 V rail; all grounds are common.
 
@@ -219,7 +219,7 @@ taptapon/
 
 - **Dashboard and simulator:** plain HTML, CSS and JavaScript (ES modules). **No build step, no framework.** Load the Firebase JS SDK (modular, v10 or later) from the official `gstatic.com` CDN. Run locally with the VS Code **Live Server** extension.
 - **Service:** Node.js 20.6+ with `firebase-admin` only (`.env` is loaded by Node's built-in `--env-file`, so no `dotenv`). Point/alert rules live in `service/rules.js` with tests in `rules.test.js` (`npm test`). Call the Telegram Bot API with built-in `fetch` (`https://api.telegram.org/bot<TOKEN>/sendMessage`); no extra Telegram library needed.
-- **Firmware:** Arduino IDE (or Wokwi), ESP32 board package. Libraries: `MFRC522`, `ESP32Servo`, `HX711`. No Firebase library: the sketch signs in and reads/writes over the Firebase REST API with the ESP32's built-in `HTTPClient`, the same paths as the simulator. `FAKE_RFID 1` in `config.h` replaces the RC522 with Serial Monitor input (for Wokwi).
+- **Firmware:** Arduino IDE (or Wokwi), ESP32 board package. Libraries: `MFRC522`, `ESP32Servo`, `HX711`, `Adafruit SSD1306` (+ Adafruit GFX). No Firebase library: the sketch signs in and reads/writes over the Firebase REST API with the ESP32's built-in `HTTPClient`, the same paths as the simulator. `FAKE_RFID 1` in `config.h` replaces the RC522 with Serial Monitor input (for Wokwi).
 - **Auth:** Firebase Authentication (email/password). An account's role comes from `/roles/{uid}`, not from its email.
   - `admin` accounts → admin dashboard.
   - one `device` account → used by the simulator and the ESP32 to write `bins` and `deposits`. You type its password into the simulator page (never into code). Still, **the simulator is run locally only, never hosted** — anyone with the device login can fake deposits.
