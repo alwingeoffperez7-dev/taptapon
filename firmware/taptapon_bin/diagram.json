@@ -42,7 +42,7 @@
     [ "residualBtn:1.r", "esp:D14", "gray", [] ],
     [ "residualBtn:2.r", "esp:GND.1", "black", [] ],
 
-    [ "esp:D21", "r1:1", "green", [] ],
+    [ "esp:D2", "r1:1", "green", [] ],
     [ "r1:2", "led:A", "green", [] ],
     [ "led:C", "esp:GND.2", "black", [] ],
 

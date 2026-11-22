@@ -18,9 +18,9 @@ const int PIN_SERVO = 13;                      // residual flap
 const int PIN_IR = 32;                         // break-beam receiver: LOW = beam broken
 const int PIN_HX1_DT = 16, PIN_HX1_SCK = 17;   // load cell #1: recyclables (PET)
 const int PIN_HX2_DT = 4, PIN_HX2_SCK = 25;    // load cell #2: residual
-const int PIN_LED = 21, PIN_BUZZER = 33;
+const int PIN_LED = 2, PIN_BUZZER = 33;     // GPIO 2 = also the board's onboard LED
 const int PIN_RESIDUAL_BTN = 14;               // press to open the residual flap
-const int PIN_RC522_SS = 5, PIN_RC522_RST = 22;
+const int PIN_RC522_SS = 5, PIN_RC522_RST = 15;  // 21/22 stay free for an I2C OLED
 
 // ---- Timing ----
 const unsigned long MEASURE_EVERY_MS = 2000;
@@ -45,7 +45,29 @@ String tappedUid;
 unsigned long tappedAt = 0;
 int pendingBottles = 0;
 unsigned long lastBeamAt = 0;
-bool beamWasBroken = false;
+// Beam timing (anti-cheat): a dropped bottle falls through the beam in a fraction of a second,
+// while a hand waved or held in the port blocks it much longer. Only short blocks count.
+const unsigned long BEAM_MIN_MS = 5;     // shorter = electrical glitch, ignored
+const unsigned long BEAM_MAX_MS = 500;   // longer = hand / stuck object, rejected
+// Set by the interrupt below, read by checkBottles(). volatile = may change at any moment.
+volatile unsigned long beamBlockedAt = 0;
+volatile int beamValid = 0, beamRejected = 0;
+volatile unsigned long lastRejectedMs = 0;
+
+// Runs the instant the beam changes, even while the bin is busy uploading to Firebase,
+// so a fast-falling bottle can never slip through unseen.
+void IRAM_ATTR onBeamChange() {
+  unsigned long now = millis();
+  if (digitalRead(PIN_IR) == LOW) {          // beam just got blocked
+    beamBlockedAt = now;
+  } else if (beamBlockedAt) {                // beam just cleared: how long was it blocked?
+    unsigned long blocked = now - beamBlockedAt;
+    beamBlockedAt = 0;
+    if (blocked < BEAM_MIN_MS) return;       // glitch
+    if (blocked <= BEAM_MAX_MS) beamValid++;
+    else { beamRejected++; lastRejectedMs = blocked; }
+  }
+}
 float petBaseline = 0, residualBaseline = 0;
 unsigned long lastMeasureAt = 0, lastReportAt = 0;
 int lastReportedFill = -100;
@@ -199,6 +221,22 @@ void showVerdict(const String& key) {
   Serial.println("  service didn't answer (is it running?)");
 }
 
+// Weight from the median of 7 readings: one misread from electrical noise can't turn an 18 g
+// bottle into a huge number (an average would be thrown off by a single spike).
+long medianRaw(HX711& scale) {
+  long r[7];
+  for (int i = 0; i < 7; i++) r[i] = scale.read();
+  for (int i = 1; i < 7; i++) for (int j = i; j > 0 && r[j - 1] > r[j]; j--) { long t = r[j]; r[j] = r[j - 1]; r[j - 1] = t; }
+  return r[3];
+}
+float medianGrams(HX711& scale) { return (medianRaw(scale) - scale.get_offset()) / scale.get_scale(); }
+
+// A scale that isn't connected would make read() wait forever and freeze the bin.
+// Missing scales read as 0 g, so deposits still go through (prototype v1 runs without scales).
+bool petScaleOk = false, residualScaleOk = false;
+float petGrams() { return petScaleOk ? medianGrams(scalePet) : 0; }
+float residualGrams() { return residualScaleOk ? medianGrams(scaleResidual) : 0; }
+
 // Returns false if the deposit didn't reach Firebase, so the caller can keep it and retry.
 bool sendDeposit(const char* type, int count, float grams) {
   bool tapped = tappedUid.length() && millis() - tappedAt < TAP_VALID_MS;
@@ -222,17 +260,27 @@ bool sendDeposit(const char* type, int count, float grams) {
 
 // Counts bottles through the IR beam, then weighs them once they've all dropped.
 void checkBottles() {
-  bool broken = digitalRead(PIN_IR) == LOW;
-  if (broken && !beamWasBroken && millis() - lastBeamAt > 150) {  // 150 ms debounce
-    pendingBottles++;
+  // Take whatever the interrupt counted since last time.
+  noInterrupts();
+  int valid = beamValid, rejected = beamRejected;
+  unsigned long rejectedMs = lastRejectedMs;
+  beamValid = 0; beamRejected = 0;
+  interrupts();
+
+  if (valid > 0) {
+    pendingBottles += valid;
     lastBeamAt = millis();
     beep(30, 3000);
     Serial.printf("Bottle counted (%d)\n", pendingBottles);
   }
-  beamWasBroken = broken;
+  if (rejected > 0) {
+    Serial.printf("Ignored: beam blocked %lu ms (longer than %lu ms, not a falling bottle)\n", rejectedMs, BEAM_MAX_MS);
+    beep(150, 400);
+  }
 
+  bool broken = digitalRead(PIN_IR) == LOW;
   if (pendingBottles > 0 && !broken && millis() - lastBeamAt > DEPOSIT_SETTLE_MS) {
-    float now = scalePet.get_units(5);
+    float now = petGrams();
     // Only move the baseline once the deposit is saved; otherwise its weight would be lost.
     if (sendDeposit("pet", pendingBottles, now - petBaseline)) {
       petBaseline = now;
@@ -250,7 +298,7 @@ void checkResidualButton() {
   delay(FLAP_OPEN_MS);
   flap.write(0);
   delay(1000);  // let the load cell settle
-  float now = scaleResidual.get_units(5);
+  float now = residualGrams();
   float added = now - residualBaseline;
   if (added < 2) { Serial.println("Nothing dropped"); return; }  // ignore scale noise
   if (sendDeposit("residual", 0, added)) residualBaseline = now;  // on failure, the weight joins the next residual deposit
@@ -296,6 +344,7 @@ void setup() {
   pinMode(PIN_TRIG, OUTPUT);
   pinMode(PIN_ECHO, INPUT);
   pinMode(PIN_IR, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(PIN_IR), onBeamChange, CHANGE);
   pinMode(PIN_RESIDUAL_BTN, INPUT_PULLUP);
   pinMode(PIN_LED, OUTPUT);
   pinMode(PIN_BUZZER, OUTPUT);
@@ -304,13 +353,17 @@ void setup() {
   flap.attach(PIN_SERVO, 500, 2400);
   flap.write(0);
 
-  // Both bins must be empty at power-on: tare() makes the current weight zero.
+  // Both bins must be empty at power-on: the current weight becomes zero (median, spike-proof).
+  // A scale that doesn't answer within 1 s is treated as not connected.
   scalePet.begin(PIN_HX1_DT, PIN_HX1_SCK);
-  scalePet.set_scale(PET_CALIBRATION);
-  scalePet.tare();
+  petScaleOk = scalePet.wait_ready_timeout(1000);
+  if (petScaleOk) { scalePet.set_scale(PET_CALIBRATION); scalePet.set_offset(medianRaw(scalePet)); }
   scaleResidual.begin(PIN_HX2_DT, PIN_HX2_SCK);
-  scaleResidual.set_scale(RESIDUAL_CALIBRATION);
-  scaleResidual.tare();
+  residualScaleOk = scaleResidual.wait_ready_timeout(1000);
+  if (residualScaleOk) { scaleResidual.set_scale(RESIDUAL_CALIBRATION); scaleResidual.set_offset(medianRaw(scaleResidual)); }
+  Serial.printf("PET scale: %s, residual scale: %s\n",
+                petScaleOk ? "OK" : "NOT CONNECTED (weights read 0 g)",
+                residualScaleOk ? "OK" : "NOT CONNECTED (weights read 0 g)");
 
 #if !FAKE_RFID
   SPI.begin();
@@ -337,8 +390,8 @@ void loop() {
     measureFill();
     // Print the PET scale when it changes, to check the load cell and its calibration.
     static float lastShownGrams = 0;
-    float grams = scalePet.get_units(1) - petBaseline;
-    if (fabs(grams - lastShownGrams) >= 2) {
+    float grams = petGrams() - petBaseline;
+    if (petScaleOk && fabs(grams - lastShownGrams) >= 2) {
       Serial.printf("PET scale: %+.0f g since last deposit\n", grams);
       lastShownGrams = grams;
     }

@@ -6,7 +6,7 @@ The software is done (see `PROGRESS.md`). This guide covers what to buy, how to 
 
 ## 1. Shopping list
 
-Prices are **rough estimates** for Philippine hobby shops (Shopee, Lazada, e-Gizmo, Deeco). Check before buying.
+Prices are **rough estimates**. For actual store prices compared side by side, see [CANVASS.md](CANVASS.md).
 
 | # | Part | Qty | Approx. ₱ | Notes |
 |---|---|---|---|---|
@@ -66,13 +66,14 @@ Tips:
 |---|---|---|
 | HC-SR04 | TRIG → **GPIO 26**; ECHO → **1 kΩ → GPIO 27**, and GPIO 27 → **2 kΩ → GND** | VCC → **5 V** (VIN) |
 | SG90 servo | signal (orange) → **GPIO 13** | red → **5 V**, brown → GND; 470 µF across 5 V/GND |
-| RC522 | SDA/SS → **5**, SCK → **18**, MOSI → **23**, MISO → **19**, RST → **22** | **3.3 V ONLY** (5 V kills it) |
+| RC522 | SDA/SS → **5**, SCK → **18**, MOSI → **23**, MISO → **19**, RST → **15** | **3.3 V ONLY** (5 V kills it) |
 | IR receiver | OUT → **GPIO 32** | receiver VCC → 3.3 V; emitter → 5 V (longer range) |
 | HX711 #1 (PET) | DT → **16**, SCK → **17** | VCC → 3.3 V |
 | HX711 #2 (residual) | DT → **4**, SCK → **25** | VCC → 3.3 V |
-| LED | GPIO **21** → 220 Ω → LED long leg; short leg → GND | |
+| LED | GPIO **2** → 220 Ω → LED long leg; short leg → GND | |
 | Buzzer | **+** → GPIO **33**, **−** → GND | |
 | Residual button | one leg → GPIO **14**, other → GND | (internal pull-up) |
+| OLED 0.96" (optional, used by the parts tester) | SDA → **21**, SCL → **22** | VCC → 3.3 V, GND → GND |
 
 **All grounds are connected together.** If the servo makes the ESP32 restart, power the servo from the adapter's 5 V directly instead of the ESP32's VIN pin, with grounds still shared.
 

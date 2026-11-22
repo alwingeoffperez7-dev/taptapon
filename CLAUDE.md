@@ -46,8 +46,8 @@ The bin and simulator **only record what happened** (a deposit, a fill reading).
 | 3 | RC522 RFID reader | Student taps ID to earn points (optional — bin works without a tap) |
 | 4 | Bottle intake port, Ø80 mm | One PET bottle at a time |
 | 5 | IR break-beam pair | Counts each bottle that passes the port |
-| 6 | 5 kg load cell + HX711 (×2) | Confirms each deposit by weight |
-| 7 | Status LED + buzzer | One LED on GPIO 21: 3 fast blinks + beep = points earned, solid = bin full, two low beeps = no points |
+| 6 | 5 kg load cell + HX711 (×2) | Confirms each deposit by weight. **Prototype v1: fitted but not connected** (decided 2026-11-21); `config/minDepositGrams` = 0 so beam-counted bottles earn points. Bench-tested (PET_CALIBRATION ≈ 337); re-enable in v2 by wiring them and setting `minDepositGrams` back to 10. |
+| 7 | Status LED + buzzer | One LED on GPIO 2: 3 fast blinks + beep = points earned, solid = bin full, two low beeps = no points |
 | 9 | Push button | Opens the residual flap (servo) |
 | 8 | ESP32 | Wi-Fi to Firebase |
 
@@ -56,14 +56,15 @@ The bin and simulator **only record what happened** (a deposit, a fill reading).
 | Component | Signal | GPIO |
 |---|---|---|
 | HC-SR04 | TRIG, ECHO* | 26, 27 |
-| RC522 (SPI) | SS, SCK, MOSI, MISO, RST | 5, 18, 23, 19, 22 |
+| RC522 (SPI) | SS, SCK, MOSI, MISO, RST | 5, 18, 23, 19, 15 |
 | SG90 servo | PWM | 13 |
 | IR receiver | OUT (INPUT_PULLUP) | 32 |
 | HX711 #1 (recyclables) | DT, SCK | 16, 17 |
 | HX711 #2 (residual) | DT, SCK | 4, 25 |
-| Status LED | OUT | 21 |
+| Status LED | OUT | 2 (same pin as the board's onboard LED) |
 | Buzzer | OUT | 33 |
 | Residual flap button | IN (INPUT_PULLUP, pressed = LOW) | 14 |
+| OLED 0.96" SSD1306 (I2C, optional) | SDA, SCL | 21, 22 (ESP32 default I2C; used by `firmware/part_test`, free for a future bin display) |
 
 \* ECHO goes through a 1 kΩ / 2 kΩ voltage divider (5 V → 3.3 V). Servo and HC-SR04 run on the 5 V rail; all grounds are common.
 
@@ -158,7 +159,7 @@ Every part of the system reads and writes these exact paths and field names. **D
 2. If `tagUid` is null → `reason: "no_tap"`, 0 points (still counts toward bin totals).
 3. If `tagUid` is not in `/tags` → `reason: "unknown_tag"`, 0 points.
 4. If `type` is not `"pet"` → `reason: "residual"`, 0 points.
-5. If `count < 1` **or** `weightGrams < config.minDepositGrams` → `reason: "not_verified"`, 0 points.
+5. If `count < 1` **or** `weightGrams < config.minDepositGrams` → `reason: "not_verified"`, 0 points. (Prototype v1 runs with `minDepositGrams = 0` because the scales are not connected, so only the beam count is checked.)
 6. If `students/{id}/daily/{today}` ≥ `config.dailyPointCap` (Asia/Manila day) → `reason: "daily_cap"`, 0 points.
 7. Otherwise award `count × config.pointsPerBottle` (trimmed so the daily cap is not exceeded), using **one transaction on `students/{id}`** that updates `points`, `daily/{today}` and `totalBottles` together.
 8. Always add to `bins/{binId}/totals`, then write `studentId`, `pointsAwarded`, `reason` on the deposit.
